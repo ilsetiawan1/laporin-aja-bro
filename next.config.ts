@@ -1,7 +1,22 @@
 import type { NextConfig } from "next";
 
+// next.config.ts
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb', // Kita naikin jadi 5MB biar aman buat upload foto
+    },
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'qfuimxvkgprtsumarxsy.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

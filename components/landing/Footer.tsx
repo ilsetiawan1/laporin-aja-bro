@@ -1,29 +1,29 @@
-import Image from "next/image";
 import Link from "next/link";
 
 const FOOTER_LINKS = [
   {
     heading: "Platform",
     links: [
-      { label: "Beranda", href: "#hero" },
-      { label: "Buat Laporan", href: "#report-form" },
-      { label: "Fitur", href: "#features" },
+      { label: "Beranda", href: "/" },
+      { label: "Buat Laporan", href: "/lapor" },
+      { label: "Status Laporan", href: "/status" },
     ],
   },
   {
     heading: "Akun",
     links: [
-      { label: "Login", href: "#" },
-      { label: "Daftar", href: "#" },
-      { label: "Dashboard", href: "#" },
+      { label: "Login", href: "/login" },
+      { label: "Daftar", href: "/register" },
     ],
   },
   {
-    heading: "Info",
+    heading: "Wilayah",
     links: [
-      { label: "Tentang Kami", href: "#" },
-      { label: "Kebijakan Privasi", href: "#" },
-      { label: "Syarat & Ketentuan", href: "#" },
+      { label: "Kota Yogyakarta", href: "/status?city=kota-yogyakarta" },
+      { label: "Sleman", href: "/status?city=sleman" },
+      { label: "Bantul", href: "/status?city=bantul" },
+      { label: "Gunungkidul", href: "/status?city=gunungkidul" },
+      { label: "Kulon Progo", href: "/status?city=kulon-progo" },
     ],
   },
 ];
@@ -32,28 +32,35 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#1a1a1a] text-white">
+    <footer className="bg-navy text-white">
       {/* Main Footer */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <Image
-                src="/images/logo.png"
-                alt="Laporin Aja Bro"
-                width={40}
-                height={40}
-                className="w-10 h-10 object-contain"
-              />
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 bg-blue rounded-xl flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                  />
+                </svg>
+              </div>
               <span className="font-bold text-lg">Laporin Aja Bro</span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-5">
-              Platform laporan publik berbasis AI. Suara Anda adalah perubahan
-              nyata bagi lingkungan sekitar.
+            <p className="text-white/50 text-sm leading-relaxed mb-5">
+              Platform laporan publik berbasis AI untuk Daerah Istimewa
+              Yogyakarta. Suara Anda adalah perubahan nyata.
             </p>
-            {/* Social Links */}
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               {[
                 {
                   label: "Twitter",
@@ -78,7 +85,7 @@ export default function Footer() {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="w-8 h-8 bg-white/10 hover:bg-[#f21913] rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+                  className="w-8 h-8 bg-white/10 hover:bg-blue rounded-lg flex items-center justify-center text-white/50 hover:text-white transition-all duration-200"
                 >
                   {social.icon}
                 </a>
@@ -89,18 +96,18 @@ export default function Footer() {
           {/* Navigation Columns */}
           {FOOTER_LINKS.map((group) => (
             <div key={group.heading}>
-              <h4 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">
+              <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">
                 {group.heading}
               </h4>
               <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <a
+                    <Link
                       href={link.href}
-                      className="text-gray-400 hover:text-white text-sm transition-colors duration-200 hover:translate-x-1 inline-block"
+                      className="text-white/50 hover:text-white text-sm transition-colors duration-200 hover:translate-x-1 inline-block"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -112,14 +119,14 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-gray-500 text-xs">
+          <p className="text-white/35 text-xs">
             © {currentYear}{" "}
-            <span className="text-gray-400 font-medium">Laporin Aja Bro</span>.
+            <span className="text-white/60 font-medium">Laporin Aja Bro</span>.
             Hak cipta dilindungi undang-undang.
           </p>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-gray-500 text-xs">Sistem berjalan normal</span>
+            <span className="text-white/35 text-xs">Sistem berjalan normal</span>
           </div>
         </div>
       </div>

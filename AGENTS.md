@@ -8,13 +8,24 @@ This project is a web-based public reporting system called **"Laporin Aja Bro"**
 
 ## 🎨 Design System
 
-### Colors
+### Colors (Tailwind Custom)
 
-* Primary: #f21913 (brand color)
-* Background: #f21913
-* Text Primary: #ffffff
-* Text Secondary: #1a1a1a
-* Hover State: #c91410
+* navy: #0F172A → Text & Heading
+* blue: #1E40AF → Buttons & Primary UI
+* orange: #F97316 → Accent / Highlight / Status
+* red: #EF4444 → Alerts / Errors
+* bg: #F8FAFC → Background
+
+### Usage Rules
+
+* Use `bg-bg` for main background
+* Use `text-navy` for main text
+* Use `bg-blue` for buttons
+* Use `text-orange` for highlights
+* Use `text-red` for errors only
+
+* Always maintain contrast
+* Prefer clean and modern look
 
 ### Usage Rules
 
@@ -33,19 +44,24 @@ This project is a web-based public reporting system called **"Laporin Aja Bro"**
 
 ---
 
+## 🗂️ Database Context (Sync with schema.sql)
+- **Tables**: `profiles`, `categories`, `cities`, `districts`, `reports`, `ai_analysis`.
+- **RBAC**: Role is stored in `profiles.role` ('admin' | 'user').
+- **Location Logic**: DIY focus. `districts` belongs to `cities`.
+- **Flow**: User creates `reports` -> AI analyzes and inserts into `ai_analysis`.
+
+---
+
 ## 🧠 AI Responsibilities
 
-### User:
+### User Flow:
+- Help users fill the report form.
+- **Location Mapping**: Match user description to the correct `city_id` and `district_id`.
+- **Auto-Classify**: Map report to existing `categories`.
 
-* Auto classify category
-* Suggest priority
-
-### Admin:
-
-* Generate summary
-* Highlight key points
-* Recommend agency
-
+### Admin Flow:
+- **Summarization**: Use `ai_analysis` table to store insights.
+- **Actionable Advice**: Suggest which government agency should handle the report.
 ---
 
 ## 🧩 Coding Guidelines
