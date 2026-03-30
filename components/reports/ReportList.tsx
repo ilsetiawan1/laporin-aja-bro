@@ -41,13 +41,16 @@ export default function ReportList() {
   const [filterCity, setFilterCity] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
 
+  // State untuk toggle filter panel
+  const [filterOpen, setFilterOpen] = useState(false);
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
   }, [search]);
 
-  // Load filter options via server actions (no direct supabase)
+  // Load filter options
   useEffect(() => {
     Promise.all([getCategories(), getCities()]).then(([cats, cits]) => {
       setCategories(cats);
@@ -55,7 +58,7 @@ export default function ReportList() {
     });
   }, []);
 
-  // Fetch reports via server action
+  // Fetch reports
   const fetchReports = useCallback(async () => {
     setLoading(true);
     const data = await getPublicReports({
@@ -80,7 +83,8 @@ export default function ReportList() {
     getUserVotedIdsAction().then((ids) => setVotedIds(new Set(ids)));
   }, [user]);
 
-  const hasFilters = debouncedSearch || filterStatus || filterCity || filterCategory;
+  const hasActiveFilters = filterStatus || filterCity || filterCategory;
+  const hasFilters = debouncedSearch || hasActiveFilters;
 
   const clearFilters = () => {
     setSearch("");
@@ -92,9 +96,11 @@ export default function ReportList() {
   return (
     <div>
       {/* Search + Filters */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 mb-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 mb-6 shadow-md shadow-navy/10">
+
+        {/* Baris utama: Search input + tombol Filter */}
+        <div className="flex items-center gap-3">
+          {/* Search input */}
           <div className="relative flex-1">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/35"
@@ -109,55 +115,84 @@ export default function ReportList() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari laporan..."
-              className="input-field pl-9"
+              onFocus={() => setFilterOpen(true)}
+              placeholder="    Cari laporan..."
+              className="input-field pl-9 transition-all duration-300"
               id="status-search"
             />
           </div>
 
-          {/* Filters */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="input-field sm:w-36"
-            id="status-filter-status"
+          {/* Tombol toggle filter */}
+          <button
+            onClick={() => setFilterOpen((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 shrink-0 ${filterOpen
+              ? "border-blue/40 text-blue bg-blue/5"
+              : "border-slate-200 text-navy/50 bg-white hover:border-blue/30 hover:text-blue"
+              }`}
           >
-            <option value="">Semua Status</option>
-            <option value="pending">Menunggu</option>
-            <option value="diproses">Diproses</option>
-            <option value="selesai">Selesai</option>
-            <option value="ditolak">Ditolak</option>
-          </select>
-
-          <select
-            value={filterCity}
-            onChange={(e) => setFilterCity(e.target.value)}
-            className="input-field sm:w-44"
-            id="status-filter-city"
-          >
-            <option value="">Semua Kota</option>
-            {cities.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="input-field sm:w-44"
-            id="status-filter-category"
-          >
-            <option value="">Semua Kategori</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2" />
+            </svg>
+            Filter
+            {/* Dot indikator jika ada filter aktif */}
+            {hasActiveFilters && (
+              <span className="w-1.5 h-1.5 rounded-full bg-orange inline-block ml-0.5" />
+            )}
+          </button>
         </div>
 
+        {/* Filter panel — slide down saat filterOpen */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${filterOpen ? "max-h-40 opacity-100 mt-3" : "max-h-0 opacity-0 pointer-events-none"
+            }`}
+        >
+          <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="input-field sm:w-36"
+              id="status-filter-status"
+            >
+              <option value="">Semua Status</option>
+              <option value="pending">Menunggu</option>
+              <option value="diproses">Diproses</option>
+              <option value="selesai">Selesai</option>
+              <option value="ditolak">Ditolak</option>
+            </select>
+
+            <select
+              value={filterCity}
+              onChange={(e) => setFilterCity(e.target.value)}
+              className="input-field sm:w-44"
+              id="status-filter-city"
+            >
+              <option value="">Semua Kota</option>
+              {cities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="input-field sm:w-44"
+              id="status-filter-category"
+            >
+              <option value="">Semua Kategori</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Info hasil filter + reset */}
         {hasFilters && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
             <p className="text-navy/50 text-xs">
@@ -230,7 +265,7 @@ export default function ReportList() {
                   )}
                 </div>
 
-                {/* Title — clickable */}
+                {/* Title */}
                 <Link href={`/reports/${report.id}`} className="flex-1 block">
                   <h3 className="text-navy font-semibold text-sm leading-snug mb-3 line-clamp-2 group-hover:text-blue transition-colors">
                     {report.title}
@@ -260,7 +295,6 @@ export default function ReportList() {
                         year: "numeric",
                       })}
                     </p>
-                    {/* Vote button kecil */}
                     <VoteButton
                       reportId={report.id}
                       initialVoteCount={report.vote_count ?? 0}
@@ -270,18 +304,11 @@ export default function ReportList() {
                       userId={user?.id ?? null}
                       authLoading={authLoading}
                       size="sm"
-                    // reportId={report.id}
-                    // initialVoteCount={report.vote_count ?? 0}
-                    // initialHasVoted={false}
-                    // initialPriorityScore={report.priority_score ?? 0}
-                    // initialPriority={priority}
-                    // userId={user?.id ?? null}
-                    // size="sm"
                     />
                   </div>
-                  {/* Priority badge */}
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
-                    {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"} {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                    {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"}{" "}
+                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
                   </span>
                 </div>
               </div>

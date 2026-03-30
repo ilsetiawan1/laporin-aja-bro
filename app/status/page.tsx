@@ -16,7 +16,7 @@ export default function StatusPage() {
 
       <div className="flex-1 bg-bg pt-24 pb-16">
         {/* Hero Banner */}
-        <div className="bg-navy pt-12 pb-24 px-4 sm:px-6 relative overflow-hidden">
+        <div className="bg-navy pt-12 pb-28 px-4 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue/20 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange/10 rounded-full blur-3xl" />
@@ -56,8 +56,7 @@ export default function StatusPage() {
           </div>
         </div>
 
-        {/* Report List (overlapping the navy banner) */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
           <ReportList />
         </div>
       </div>
