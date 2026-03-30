@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/context/authContext";
 import VoteButton from "@/components/reports/VoteButton";
 import { getPriorityBadgeClass, getPriorityLabel } from "@/lib/utils/priorityCalculator";
 import type { ReportWithRelations } from "@/types";
+import { getUserVotedIdsAction } from "@/lib/actions/votes";
 
 type Category = { id: string; name: string };
 type City = { id: string; name: string };
@@ -31,7 +32,8 @@ export default function ReportList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -69,6 +71,14 @@ export default function ReportList() {
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
+
+  useEffect(() => {
+    if (!user) {
+      setVotedIds(new Set());
+      return;
+    }
+    getUserVotedIdsAction().then((ids) => setVotedIds(new Set(ids)));
+  }, [user]);
 
   const hasFilters = debouncedSearch || filterStatus || filterCity || filterCategory;
 
@@ -204,69 +214,77 @@ export default function ReportList() {
             const priority = getPriorityLabel(report.priority_score ?? 0);
             const badgeClass = getPriorityBadgeClass(priority);
             return (
-            <div
-              key={report.id}
-              className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/25 hover:shadow-md hover:shadow-navy/5 transition-all duration-200 group flex flex-col"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <span className={STATUS_STYLES[report.status] || "badge-pending"}>
-                  {STATUS_LABELS[report.status] || report.status}
-                </span>
-                {report.categories?.name && (
-                  <span className="text-[11px] text-navy/40 font-medium shrink-0">
-                    {report.categories.name}
+              <div
+                key={report.id}
+                className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/25 hover:shadow-md hover:shadow-navy/5 transition-all duration-200 group flex flex-col"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <span className={STATUS_STYLES[report.status] || "badge-pending"}>
+                    {STATUS_LABELS[report.status] || report.status}
                   </span>
-                )}
-              </div>
-
-              {/* Title — clickable */}
-              <Link href={`/reports/${report.id}`} className="flex-1 block">
-                <h3 className="text-navy font-semibold text-sm leading-snug mb-3 line-clamp-2 group-hover:text-blue transition-colors">
-                  {report.title}
-                </h3>
-              </Link>
-
-              {/* Meta */}
-              <div className="space-y-1.5 pt-3 border-t border-slate-50">
-                {report.cities?.name && (
-                  <p className="text-navy/45 text-xs flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-orange shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {report.cities.name}
-                    {report.districts?.name && `, ${report.districts.name}`}
-                  </p>
-                )}
-                <div className="flex items-center justify-between">
-                  <p className="text-navy/35 text-xs flex items-center gap-1.5">
-                    <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(report.created_at).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                  {/* Vote button kecil */}
-                  <VoteButton
-                    reportId={report.id}
-                    initialVoteCount={report.vote_count ?? 0}
-                    initialHasVoted={false}
-                    initialPriorityScore={report.priority_score ?? 0}
-                    initialPriority={priority}
-                    userId={user?.id ?? null}
-                    size="sm"
-                  />
+                  {report.categories?.name && (
+                    <span className="text-[11px] text-navy/40 font-medium shrink-0">
+                      {report.categories.name}
+                    </span>
+                  )}
                 </div>
-                {/* Priority badge */}
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
-                  {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"} {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                </span>
+
+                {/* Title — clickable */}
+                <Link href={`/reports/${report.id}`} className="flex-1 block">
+                  <h3 className="text-navy font-semibold text-sm leading-snug mb-3 line-clamp-2 group-hover:text-blue transition-colors">
+                    {report.title}
+                  </h3>
+                </Link>
+
+                {/* Meta */}
+                <div className="space-y-1.5 pt-3 border-t border-slate-50">
+                  {report.cities?.name && (
+                    <p className="text-navy/45 text-xs flex items-center gap-1.5">
+                      <svg className="w-3 h-3 text-orange shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {report.cities.name}
+                      {report.districts?.name && `, ${report.districts.name}`}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <p className="text-navy/35 text-xs flex items-center gap-1.5">
+                      <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {new Date(report.created_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                    {/* Vote button kecil */}
+                    <VoteButton
+                      reportId={report.id}
+                      initialVoteCount={report.vote_count ?? 0}
+                      initialHasVoted={votedIds.has(report.id)}
+                      initialPriorityScore={report.priority_score ?? 0}
+                      initialPriority={priority}
+                      userId={user?.id ?? null}
+                      authLoading={authLoading}
+                      size="sm"
+                    // reportId={report.id}
+                    // initialVoteCount={report.vote_count ?? 0}
+                    // initialHasVoted={false}
+                    // initialPriorityScore={report.priority_score ?? 0}
+                    // initialPriority={priority}
+                    // userId={user?.id ?? null}
+                    // size="sm"
+                    />
+                  </div>
+                  {/* Priority badge */}
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                    {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"} {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                  </span>
+                </div>
               </div>
-            </div>
             );
           })}
         </div>
