@@ -1,36 +1,29 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+// ============================================================
+// lib/actions/locations.ts
+// Thin server action wrappers for location data
+// Delegates to locationRepository (public data)
+// ============================================================
 
-export async function getCities() {
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("cities")
-    .select("id, name")
-    .order("name");
+import * as locationRepo from "@/lib/repositories/locationRepository";
+import type { Category, City, District } from "@/types";
 
-  if (error) {
-    console.error("Error fetching cities:", error);
-    return [];
-  }
+// export type { Category, City, District };
 
-  return data;
+export async function getCategories(): Promise<Category[]> {
+  return locationRepo.getCategories();
 }
 
-export async function getDistricts(cityId: string) {
-  if (!cityId) return [];
-  
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("districts")
-    .select("id, name")
-    .eq("city_id", cityId)
-    .order("name");
+export async function getCities(): Promise<City[]> {
+  return locationRepo.getCities();
+}
 
-  if (error) {
-    console.error("Error fetching districts:", error);
-    return [];
-  }
+export async function getDistricts(cityId: string): Promise<District[]> {
+  return locationRepo.getDistrictsByCity(cityId);
+}
 
-  return data;
+// Keep legacy name for backward compatibility
+export async function getDistrictsByCity(cityId: string): Promise<District[]> {
+  return locationRepo.getDistrictsByCity(cityId);
 }

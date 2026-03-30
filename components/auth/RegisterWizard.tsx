@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCities, getDistricts } from "@/lib/actions/locations";
 import { registerAction } from "@/lib/actions/auth";
-import { supabase } from "@/lib/supabase/client";
+import { uploadAvatarAction } from "@/lib/actions/storage";
 import { toast } from "sonner";
 
 interface RegisterWizardProps {
@@ -113,22 +113,16 @@ export default function RegisterWizard({ onGoToLogin }: RegisterWizardProps) {
     startTransition(async () => {
       let avatarUrl = "";
       
-      // Client-side Upload to skip payload limits in Sever Actions (although bodySizeLimit was updated)
+      // Upload avatar via server action (no direct supabase storage in client)
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop() || "jpg";
-        const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, avatarFile);
-
-        if (!uploadError) {
-          const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
-          avatarUrl = data.publicUrl;
-        } else {
-           console.error("Failed to upload avatar:", uploadError);
-           setRegisterState({ error: "Gagal mengunggah avatar. Cek batas ukuran 5MB." });
-           return;
+        const uploadForm = new FormData();
+        uploadForm.append("file", avatarFile);
+        const uploadResult = await uploadAvatarAction(uploadForm);
+        if (uploadResult.error) {
+          setRegisterState({ error: uploadResult.error });
+          return;
         }
+        avatarUrl = uploadResult.url ?? "";
       }
 
       // Prepare payload manually to prevent missing unmounted inputs

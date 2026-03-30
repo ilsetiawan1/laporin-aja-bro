@@ -4,14 +4,16 @@ import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/context/authContext";
 import { submitReport } from "@/lib/actions/reports";
+import { getCategories, getCities, getDistricts } from "@/lib/actions/locations";
 import Combobox from "@/components/ui/Combobox";
+import { autoCategorize } from "@/lib/utils/autoCategorize";
 
+// ─── Local Types ─────────────────────────────────────────────
 type Category = { id: string; name: string };
 type City = { id: string; name: string };
 type District = { id: string; name: string };
-type User = { email: string; id: string } | null;
 
 interface LaporFormProps {
   onOpenAuthModal?: (tab?: "login" | "register") => void;
@@ -42,9 +44,8 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // Auth state
-  const [user, setUser] = useState<User>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  // Auth state via hook (allowed exception)
+  const { user, loading: authLoading } = useAuth();
 
   // Form data options
   const [categories, setCategories] = useState<Category[]>([]);
@@ -71,18 +72,12 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
   // Result state
   const [result, setResult] = useState<{ error?: string; success?: boolean } | null>(null);
   const [charCount, setCharCount] = useState({ title: 0, description: 0 });
-
-  // Check auth state
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user ? { id: user.id, email: user.email ?? "" } : null);
-      setAuthLoading(false);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { id: session.user.id, email: session.user.email ?? "" } : null);
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [detectedCategory, setDetectedCategory] = useState<{
+    name: string;
+    id: string;
+  } | null>(null);
+  const [categoryOverridden, setCategoryOverridden] = useState(false);
 
   // Prefill from landing mini form
   useEffect(() => {
@@ -94,20 +89,20 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
     }
   }, []);
 
-  // Load categories + cities
+  // Load categories + cities via server actions (no direct supabase)
   useEffect(() => {
     async function loadData() {
-      const [{ data: cats }, { data: cits }] = await Promise.all([
-        supabase.from("categories").select("id, name").order("name"),
-        supabase.from("cities").select("id, name").order("name"),
+      const [cats, cits] = await Promise.all([
+        getCategories(),
+        getCities(),
       ]);
-      setCategories(cats ?? []);
-      setCities(cits ?? []);
+      setCategories(cats);
+      setCities(cits);
     }
     loadData();
   }, []);
 
-  // Load districts when city changes
+  // Load districts when city changes via server action
   useEffect(() => {
     if (!formData.city_id) {
       setDistricts([]);
@@ -115,16 +110,11 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
       return;
     }
     setLoadingDistricts(true);
-    supabase
-      .from("districts")
-      .select("id, name")
-      .eq("city_id", formData.city_id)
-      .order("name")
-      .then(({ data }) => {
-        setDistricts(data ?? []);
-        setFormData((prev) => ({ ...prev, district_id: "" }));
-        setLoadingDistricts(false);
-      });
+    getDistricts(formData.city_id).then((data) => {
+      setDistricts(data);
+      setFormData((prev) => ({ ...prev, district_id: "" }));
+      setLoadingDistricts(false);
+    });
   }, [formData.city_id]);
 
   const handleChange = (
@@ -133,7 +123,30 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "title") setCharCount((prev) => ({ ...prev, title: value.length }));
-    if (name === "description") setCharCount((prev) => ({ ...prev, description: value.length }));
+    if (name === "description") {
+      setCharCount((prev) => ({ ...prev, description: value.length }));
+
+      // Debounce auto-kategorisasi 500ms
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(async () => {
+        if (value.length < 10) {
+          setDetectedCategory(null);
+          return;
+        }
+        const result = await autoCategorize(value, categories);
+        if (result && !categoryOverridden) {
+          setDetectedCategory(result);
+          setFormData((prev) => ({ ...prev, category_id: result.id }));
+        } else if (!result) {
+          setDetectedCategory(null);
+        }
+      }, 500);
+    }
+    // Jika user manual ubah kategori, tandai sebagai override
+    if (name === "category_id") {
+      setCategoryOverridden(true);
+      setDetectedCategory(null);
+    }
   };
 
   // Image helpers
@@ -162,18 +175,20 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
     setIsDragging(true);
   }, []);
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    addFiles(e.dataTransfer.files);
-  }, [addFiles]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      addFiles(e.dataTransfer.files);
+    },
+    [addFiles]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
 
     if (!user) {
-      // Open AuthModal if not logged in
       onOpenAuthModal?.("login");
       return;
     }
@@ -190,7 +205,6 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
       } else {
         toast.success("Berhasil!", { description: "Laporan Anda telah terkirim." });
         setResult({ success: true });
-        // Use a timeout to let the user see the toast before redirect
         setTimeout(() => router.push("/status"), 2000);
       }
     });
@@ -277,11 +291,10 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, is_anonymous: !prev.is_anonymous }))}
               disabled={isPending}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 text-sm ${
-                formData.is_anonymous
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 text-sm ${formData.is_anonymous
                   ? "bg-orange/10 border-orange/30 text-orange"
                   : "bg-white/5 border-white/10 text-white/60"
-              }`}
+                }`}
             >
               <span className="flex items-center gap-2">
                 <span>{formData.is_anonymous ? "🕶️" : "👤"}</span>
@@ -320,7 +333,13 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
                 options={districts}
                 value={formData.district_id}
                 onChange={(id) => setFormData((prev) => ({ ...prev, district_id: id }))}
-                placeholder={loadingDistricts ? "Memuat..." : formData.city_id ? "Ketik atau pilih kecamatan..." : "Pilih kota dulu"}
+                placeholder={
+                  loadingDistricts
+                    ? "Memuat..."
+                    : formData.city_id
+                      ? "Ketik atau pilih kecamatan..."
+                      : "Pilih kota dulu"
+                }
                 disabled={isPending || !formData.city_id || loadingDistricts}
               />
             </div>
@@ -360,12 +379,36 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
             maxLength={500}
           />
           <p className="text-white/25 text-xs mt-1.5 text-right">{charCount.description}/500</p>
+          {detectedCategory && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-400/10 border border-green-400/20 px-3 py-1.5 rounded-full">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Terdeteksi: <strong>{detectedCategory.name}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryOverridden(true);
+                  setDetectedCategory(null);
+                  setFormData((prev) => ({ ...prev, category_id: "" }));
+                }}
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
+              >
+                Ubah manual
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Upload Bukti Foto ── */}
         <div>
           <label className={labelClass}>
-            Bukti Foto <span className="text-white/25 normal-case font-normal tracking-normal">(opsional, maks 4)</span>
+            Bukti Foto{" "}
+            <span className="text-white/25 normal-case font-normal tracking-normal">
+              (opsional, maks 4)
+            </span>
           </label>
 
           {/* Drag & Drop Zone */}
@@ -375,11 +418,10 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-              isDragging
+            className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
                 ? "border-blue/60 bg-blue/10"
                 : "border-white/15 hover:border-white/30 hover:bg-white/5"
-            }`}
+              }`}
           >
             <input
               ref={fileInputRef}
@@ -457,11 +499,10 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
           id="lapor-submit"
           type="submit"
           disabled={isPending || authLoading}
-          className={`w-full py-4 rounded-2xl font-black text-white text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.98] shadow-lg ${
-            user
+          className={`w-full py-4 rounded-2xl font-black text-white text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.98] shadow-lg ${user
               ? "bg-blue hover:bg-blue-hover shadow-blue/20 hover:shadow-blue/30"
               : "bg-orange hover:bg-orange-hover shadow-orange/20 hover:shadow-orange/30"
-          } ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}
+            } ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}
         >
           {isPending ? (
             <>

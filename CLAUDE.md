@@ -1,130 +1,179 @@
-# CLAUDE.md
+# CLAUDE.md — Laporin Aja Bro
 
 ## 🧠 Role
-
-You are a senior full-stack developer helping build a production-ready Next.js app.
-
----
-
-## 🎯 Project Context
-
-A public reporting system with AI features.
+You are a Senior Fullstack Engineer (Next.js 15 + Supabase) working on a competition project.
+Always write clean, modular, production-ready TypeScript code.
 
 ---
 
-## 🎨 Design Rules
-
-### Tailwind Colors
-
-* navy → text, headings
-* blue → buttons, primary actions
-* orange → highlights, badges
-* red → errors, alerts
-* bg → page background
-
-### Usage
-
-* Use `bg-bg` for page background
-* Use `text-navy` for main text
-* Use `bg-blue text-white` for buttons
-* Use `text-orange` for emphasis
-* Use `text-red` only for errors
-
-### Important:
-
-* Maintain strong contrast
-* Keep UI clean and modern
-* Follow mobile-first design
-
-### Important:
-
-* NEVER place red text on red background
-* Always ensure readability
-* Prioritize accessibility
+## 🎯 Project Overview
+**"Laporin Aja Bro"** — Platform pelaporan fasilitas publik berbasis web.
+Dibangun untuk kompetisi **TechSprint IT 2026**.
 
 ---
 
-## 💡 Development Approach
+## ✅ What's Already Done (DO NOT rewrite unless asked)
+- Supabase Auth (sign up / login / logout)
+- Tabel: `profiles`, `reports`, `comments`, `categories`, `cities`, `districts`, `ai_analysis`, `report_attachments`
+- Middleware auth redirect
+- Basic report creation form
+- Basic comment & reply system
 
-* Keep it simple
-* Focus on real-world usability
-* Optimize for demo impact
-
----
-
-## 🧩 Feature Priority
-
-1. Report form
-2. AI classification
-3. Admin dashboard
-4. AI summary
-
----
-
-## 🤖 AI Behavior
-
-* Output structured JSON
-* Use predefined categories
-* Allow manual override
+## ❌ What's NOT Yet Done (needs to be built)
+- `lib/services/` and `lib/repositories/` layer (Supabase queries masih di komponen)
+- Tabel: `report_votes`, `report_status_logs`
+- Kolom baru: `reports.priority_score` (integer), `reports.similar_count` (integer)
+- Vote system
+- Auto-kategorisasi (rule-based)
+- Deteksi laporan mirip
+- Status timeline
+- Admin dashboard
+- Realtime updates
 
 ---
 
-## 🗂️ Data Rules
-
-* Normalize database
-* Use enums
-* Support anonymous reports
-
----
-
-## 🔐 Auth & Role Rules (Next.js 15 + Supabase)
-
-* **Logic**: Sign up uses Supabase Auth -> Trigger `handle_new_user` creates entry in `profiles`.
-* **Roles**: `admin` | `user` (default: 'user').
-* **Redirects**: 
-  - Admin login -> `/admin/dashboard`
-  - User login -> `/user/dashboard` or `/home`
-* **Server Actions**: Always use Server Actions for auth and database mutations.
-* **RLS**: Respect Row Level Security (RLS) in every query.
-
----
-
-## 🎨 UI Guidance
-
-* Clean layout
-* Fast interaction
-* Clear CTA
-* AI suggestions visible
-
----
-
-## ⚠️ Competition Note
-
-* Must be demo-friendly
-* Show AI clearly
-* Avoid unnecessary complexity
+## 🗂️ Folder Structure (Target)
+```
+app/
+  (auth)/          → login, register
+  (user)/          → dashboard user, buat laporan, detail laporan
+  (admin)/         → dashboard admin
+  api/             → route handlers jika diperlukan
+components/
+  ui/              → reusable UI primitives
+  reports/         → komponen terkait laporan
+  comments/        → komponen terkait komentar
+  admin/           → komponen admin
+lib/
+  supabase.ts      → Supabase client (SUDAH ADA)
+  services/
+    reportService.ts
+    commentService.ts
+    userService.ts
+    voteService.ts
+  repositories/
+    reportRepository.ts
+    commentRepository.ts
+    voteRepository.ts
+  utils/
+    autoCategorize.ts
+    priorityCalculator.ts
+types/
+  index.ts         → semua TypeScript types/interfaces
+supabase/
+  migrations/      → SQL migration files
+```
 
 ---
 
-## 🚀 Output Style
+## 🎨 Design System (Tailwind Custom Colors)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `navy` | #0F172A | Text & Heading |
+| `blue` | #1E40AF | Buttons & Primary Actions |
+| `orange` | #F97316 | Accent / Badge / Highlight |
+| `red` | #EF4444 | Errors & Alerts ONLY |
+| `bg` | #F8FAFC | Page Background |
 
-* Clean code
-* Well-structured
-* Minimal explanation
-* Production-ready approach
+**Rules:**
+- `bg-bg` → halaman background
+- `text-navy` → teks utama
+- `bg-blue text-white` → tombol primary
+- `text-orange` → badge, emphasis
+- **NEVER** red text on red background
+- Mobile-first, clean, minimal
 
+---
 
-## 🔐 Environment Variables
+## 🔐 Auth & Role Rules
+- Sign up → Supabase Auth → trigger `handle_new_user` → insert `profiles`
+- Roles: `admin` | `user` (default: `user`)
+- Redirect setelah login:
+  - admin → `/admin/dashboard`
+  - user → `/user/dashboard`
+- Semua mutasi DB → gunakan **Server Actions**
+- Selalu hormati **RLS** Supabase
 
-The project uses Supabase.
+---
 
-Required env:
+## 🗄️ Database Rules
+- **JANGAN** query Supabase langsung di komponen UI
+- Semua akses data → lewat `lib/services/`
+- Services memanggil `lib/repositories/`
+- Repositories adalah satu-satunya layer yang boleh import Supabase client
 
-* NEXT_PUBLIC_SUPABASE_URL
-* NEXT_PUBLIC_SUPABASE_ANON_KEY
+---
 
-### Rules:
+## 📊 Priority Score Logic
+```
+priority_score = vote_count + similar_count
 
-* Always access via `process.env`
-* Never hardcode keys
-* Use `/lib/supabase.ts` client
+0–5   → "rendah"
+6–15  → "sedang"
+> 15  → "tinggi"
+```
+Update otomatis via Supabase Function/trigger ATAU di service layer setiap ada vote/laporan mirip baru.
+
+---
+
+## 🤖 Auto-Kategorisasi (Rule-Based)
+```typescript
+// lib/utils/autoCategorize.ts
+const RULES = [
+  { keywords: ["jalan", "berlubang", "aspal", "trotoar"], category: "Infrastruktur" },
+  { keywords: ["sampah", "bau", "limbah", "kotor"], category: "Lingkungan" },
+  { keywords: ["lampu", "listrik", "penerangan"], category: "Utilitas" },
+  { keywords: ["air", "banjir", "drainase", "selokan"], category: "Sanitasi" },
+  { keywords: ["taman", "pohon", "ruang hijau"], category: "Taman & RTH" },
+];
+```
+Cek `title + description` (lowercase). Return `category_id` dari DB.
+
+---
+
+## ⚡ Realtime (Supabase)
+Gunakan `supabase.channel()` untuk:
+- `reports` → INSERT (halaman publik)
+- `comments` → INSERT (detail laporan)
+- `reports` → UPDATE status (timeline)
+
+---
+
+## ✅ Acceptance Criteria per Fitur
+Setiap fitur dianggap selesai jika:
+1. Ada SQL migration (jika perlu perubahan DB)
+2. Ada repository function
+3. Ada service function
+4. Ada komponen UI yang menggunakannya
+5. RLS sudah dikonfigurasi
+6. Tidak ada query Supabase di komponen UI
+
+---
+
+## ⚙️ Environment Variables
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+- Akses via `process.env`
+- JANGAN hardcode
+- Client di `lib/supabase.ts`
+
+---
+
+## 🚫 Avoid
+- Query Supabase langsung di komponen
+- `any` type di TypeScript
+- Nested ternary > 2 level
+- External AI API (openai, gemini, dll)
+- Overengineering — kompetisi butuh demo yang jalan, bukan arsitektur sempurna
+
+---
+
+## 📝 Code Style
+- Functional components only
+- TypeScript strict
+- Server Actions untuk mutasi
+- `async/await` (bukan `.then()`)
+- Error handling dengan `try/catch`
+- Export named functions (bukan default untuk services/repositories)

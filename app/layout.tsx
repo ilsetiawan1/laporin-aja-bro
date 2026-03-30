@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/lib/context/authContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,14 +30,16 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${inter.variable}`} data-scroll-behavior="smooth">
       <body className="min-h-screen antialiased bg-bg text-navy">
-        {children}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            className: "bg-navy border border-blue/30 text-white rounded-xl shadow-2xl backdrop-blur-md",
-            descriptionClassName: "text-white/70",
-          }}
-        />
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "bg-navy border border-blue/30 text-white rounded-xl shadow-2xl backdrop-blur-md",
+              descriptionClassName: "text-white/70",
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   );

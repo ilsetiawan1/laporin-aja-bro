@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export type AuthState = { error?: string; success?: string } | null;
 
@@ -130,5 +131,23 @@ export async function registerAction(
 export async function logoutAction() {
   const supabase = await createServerClient();
   await supabase.auth.signOut();
+
+  revalidatePath("/", "layout");
   redirect("/");
+} 
+
+/**
+ * Get current authenticated user — for server components/pages
+ * Returns null if not authenticated
+ */
+export async function getAuthUser(): Promise<{ id: string; email: string } | null> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  return { id: user.id, email: user.email ?? "" };
 }
+

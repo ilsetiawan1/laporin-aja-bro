@@ -1,36 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase/client";
-
-type Report = {
-  id: string;
-  title: string;
-  status: "pending" | "diproses" | "selesai" | "ditolak";
-  created_at: string;
-  cities: { name: string } | null;
-  districts: { name: string } | null;
-  categories: { name: string } | null;
-};
-
-type RawRow = {
-  id: string;
-  title: string;
-  status: "pending" | "diproses" | "selesai" | "ditolak";
-  created_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cities: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  districts: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  categories: any;
-};
-
-function pickFirst(val: unknown): { name: string } | null {
-  if (!val) return null;
-  if (Array.isArray(val)) return val[0] ?? null;
-  return val as { name: string };
-}
+import Link from "next/link";
+import { getPublicReports } from "@/lib/actions/reports";
+import { getCategories, getCities } from "@/lib/actions/locations";
+import { useAuth } from "@/lib/context/authContext";
+import VoteButton from "@/components/reports/VoteButton";
+import { getPriorityBadgeClass, getPriorityLabel } from "@/lib/utils/priorityCalculator";
+import type { ReportWithRelations } from "@/types";
 
 type Category = { id: string; name: string };
 type City = { id: string; name: string };
@@ -50,10 +27,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ReportList() {
-  const [reports, setReports] = useState<Report[]>([]);
+  const [reports, setReports] = useState<ReportWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -67,51 +45,24 @@ export default function ReportList() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Load filter options
+  // Load filter options via server actions (no direct supabase)
   useEffect(() => {
-    Promise.all([
-      supabase.from("categories").select("id, name").order("name"),
-      supabase.from("cities").select("id, name").order("name"),
-    ]).then(([{ data: cats }, { data: cits }]) => {
-      setCategories(cats ?? []);
-      setCities(cits ?? []);
+    Promise.all([getCategories(), getCities()]).then(([cats, cits]) => {
+      setCategories(cats);
+      setCities(cits);
     });
   }, []);
 
-  // Fetch reports
+  // Fetch reports via server action
   const fetchReports = useCallback(async () => {
     setLoading(true);
-
-    let query = supabase
-      .from("reports")
-      .select(`id, title, status, created_at, cities(name), districts(name), categories(name)`)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (debouncedSearch) {
-      query = query.ilike("title", `%${debouncedSearch}%`);
-    }
-    if (filterStatus) {
-      query = query.eq("status", filterStatus);
-    }
-    if (filterCity) {
-      query = query.eq("city_id", filterCity);
-    }
-    if (filterCategory) {
-      query = query.eq("category_id", filterCategory);
-    }
-
-    const { data } = await query;
-    const normalized: Report[] = ((data as RawRow[]) ?? []).map((r) => ({
-      id: r.id,
-      title: r.title,
-      status: r.status,
-      created_at: r.created_at,
-      cities: pickFirst(r.cities),
-      districts: pickFirst(r.districts),
-      categories: pickFirst(r.categories),
-    }));
-    setReports(normalized);
+    const data = await getPublicReports({
+      search: debouncedSearch || undefined,
+      status: filterStatus || undefined,
+      city: filterCity || undefined,
+      category: filterCategory || undefined,
+    });
+    setReports(data);
     setLoading(false);
   }, [debouncedSearch, filterStatus, filterCity, filterCategory]);
 
@@ -249,10 +200,13 @@ export default function ReportList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reports.map((report) => (
+          {reports.map((report) => {
+            const priority = getPriorityLabel(report.priority_score ?? 0);
+            const badgeClass = getPriorityBadgeClass(priority);
+            return (
             <div
               key={report.id}
-              className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/25 hover:shadow-md hover:shadow-navy/5 transition-all duration-200 group"
+              className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/25 hover:shadow-md hover:shadow-navy/5 transition-all duration-200 group flex flex-col"
             >
               {/* Header */}
               <div className="flex items-start justify-between gap-2 mb-3">
@@ -266,10 +220,12 @@ export default function ReportList() {
                 )}
               </div>
 
-              {/* Title */}
-              <h3 className="text-navy font-semibold text-sm leading-snug mb-3 line-clamp-2 group-hover:text-blue transition-colors">
-                {report.title}
-              </h3>
+              {/* Title — clickable */}
+              <Link href={`/reports/${report.id}`} className="flex-1 block">
+                <h3 className="text-navy font-semibold text-sm leading-snug mb-3 line-clamp-2 group-hover:text-blue transition-colors">
+                  {report.title}
+                </h3>
+              </Link>
 
               {/* Meta */}
               <div className="space-y-1.5 pt-3 border-t border-slate-50">
@@ -283,19 +239,36 @@ export default function ReportList() {
                     {report.districts?.name && `, ${report.districts.name}`}
                   </p>
                 )}
-                <p className="text-navy/35 text-xs flex items-center gap-1.5">
-                  <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {new Date(report.created_at).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-navy/35 text-xs flex items-center gap-1.5">
+                    <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {new Date(report.created_at).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {/* Vote button kecil */}
+                  <VoteButton
+                    reportId={report.id}
+                    initialVoteCount={report.vote_count ?? 0}
+                    initialHasVoted={false}
+                    initialPriorityScore={report.priority_score ?? 0}
+                    initialPriority={priority}
+                    userId={user?.id ?? null}
+                    size="sm"
+                  />
+                </div>
+                {/* Priority badge */}
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                  {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"} {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
