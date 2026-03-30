@@ -70,7 +70,7 @@ export default function LatestReportsInteractive({
       {/* Search wrapper — relative z-10 mencegah tumpang tindih dengan hero di atasnya */}
       <div className="mb-8 relative z-10">
         <div className="relative w-full lg:w-1/2">
-          <svg
+          {/* <svg
             className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/40 pointer-events-none z-10"
             fill="none"
             viewBox="0 0 24 24"
@@ -78,13 +78,13 @@ export default function LatestReportsInteractive({
             strokeWidth={2}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          </svg> */}
           <input
             type="text"
-            placeholder="     Cari berdasarkan Judul, Kategori, atau Lokasi..."
+            placeholder="Cari berdasarkan Judul, Kategori, atau Lokasi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full input-field pl-8 bg-white shadow-sm"
+            className="input-field pl-9 transition-all duration-300 relative z-0"
           />
           {loading && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">

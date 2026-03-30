@@ -116,8 +116,8 @@ export default function ReportList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setFilterOpen(true)}
-              placeholder="    Cari laporan..."
-              className="input-field pl-9 transition-all duration-300"
+              placeholder="Cari laporan..."
+              className="input-field pl-9 transition-all duration-300 relative z-0"
               id="status-search"
             />
           </div>
