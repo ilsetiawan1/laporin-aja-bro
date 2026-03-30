@@ -1,5 +1,6 @@
 // components/admin/AdminSidebar.tsx
 import Link from "next/link";
+import { logoutAction } from "@/lib/actions/auth";
 
 interface Props {
   fullName: string;
@@ -43,6 +44,7 @@ export default function AdminSidebar({ fullName }: Props) {
       {/* Bottom links */}
       <Link
         href="/"
+        onClick={logoutAction}
         className="flex items-center gap-2.5 text-white/40 hover:text-white/70 rounded-xl px-3 py-2.5 text-xs font-medium transition-colors"
       >
         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
