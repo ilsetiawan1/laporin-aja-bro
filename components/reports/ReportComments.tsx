@@ -139,8 +139,7 @@ export default function ReportComments({
           </p>
           <button
             onClick={() => router.push("/?modal=login")}
-            className="btn-outline text-sm"
-          >
+            className="bg-blue-500 text-white px-4 py-2 rounded text-sm cursor-pointer"          >
             Masuk Sekarang
           </button>
         </div>
