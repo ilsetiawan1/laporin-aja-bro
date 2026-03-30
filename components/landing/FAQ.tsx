@@ -43,7 +43,7 @@ export default function FAQ() {
           </h2>
           <p className="text-navy/55 text-base">
             Belum menemukan jawaban?{" "}
-            <a href="mailto:halo@laporinajabro.id" className="text-blue hover:underline font-medium">
+            <a href="http://wa.me/+6281381534309" className="text-blue hover:underline font-medium">
               Hubungi kami
             </a>
           </p>
@@ -54,11 +54,10 @@ export default function FAQ() {
           {FAQS.map((faq, index) => (
             <div
               key={index}
-              className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
-                openIndex === index
+              className={`border rounded-2xl overflow-hidden transition-all duration-200 ${openIndex === index
                   ? "border-blue/30 shadow-md shadow-blue/5"
                   : "border-slate-100 hover:border-blue/20"
-              }`}
+                }`}
             >
               <button
                 id={`faq-item-${index}`}
@@ -67,18 +66,16 @@ export default function FAQ() {
                 aria-expanded={openIndex === index}
               >
                 <span
-                  className={`font-semibold text-sm sm:text-base leading-snug ${
-                    openIndex === index ? "text-blue" : "text-navy"
-                  }`}
+                  className={`font-semibold text-sm sm:text-base leading-snug ${openIndex === index ? "text-blue" : "text-navy"
+                    }`}
                 >
                   {faq.q}
                 </span>
                 <div
-                  className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    openIndex === index
+                  className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${openIndex === index
                       ? "bg-blue text-white rotate-45"
                       : "bg-blue/10 text-blue"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="w-3.5 h-3.5"
@@ -97,9 +94,8 @@ export default function FAQ() {
               </button>
 
               <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  openIndex === index ? "max-h-60" : "max-h-0"
-                }`}
+                className={`overflow-hidden transition-all duration-300 ${openIndex === index ? "max-h-60" : "max-h-0"
+                  }`}
               >
                 <p className="px-6 pb-5 text-navy/65 text-sm leading-relaxed border-t border-slate-50 pt-4">
                   {faq.a}
