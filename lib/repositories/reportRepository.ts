@@ -106,7 +106,7 @@ export async function getReportById(
     .single();
 
   if (error) {
-    console.error("[reportRepo] getReportById:", error.message);
+    console.error(error.message)
     return null;
   }
 
@@ -254,4 +254,77 @@ export async function getUserVotedReportIds(userId: string): Promise<Set<string>
     .eq("user_id", userId);
 
   return new Set((data ?? []).map((v) => v.report_id));
+}
+
+export interface AdminStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byCategory: Array<{ name: string; count: number }>;
+  highPriority: ReportWithRelations[];
+  recent: ReportWithRelations[];
+}
+
+export async function getAdminStats(
+  client: SupabaseClient
+): Promise<AdminStats> {
+  // 1. Total semua laporan
+  const { count: total } = await client
+    .from("reports")
+    .select("*", { count: "exact", head: true });
+
+  // 2. Hitung per status
+  const { data: statusData } = await client
+    .from("reports")
+    .select("status");
+
+  const byStatus: Record<string, number> = {
+    pending: 0,
+    diproses: 0,
+    selesai: 0,
+    ditolak: 0,
+  };
+  (statusData ?? []).forEach((r: { status: string }) => {
+    if (r.status in byStatus) byStatus[r.status]++;
+  });
+
+  // 3. Hitung per kategori
+  const { data: catData } = await client
+    .from("reports")
+    .select("categories ( name )");
+
+  const catMap: Record<string, number> = {};
+  (catData ?? []).forEach((r: { categories: { name: string }[] }) => {
+    const name = r.categories?.[0]?.name ?? "Tidak Berkategori";
+    catMap[name] = (catMap[name] ?? 0) + 1;
+  });
+  const byCategory = Object.entries(catMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // 4. Laporan prioritas tinggi (score > 15)
+  const { data: highRaw } = await client
+    .from("reports")
+    .select(REPORT_SELECT)
+    .gt("priority_score", 15)
+    .order("priority_score", { ascending: false })
+    .limit(5);
+
+  const highPriority = ((highRaw as Record<string, unknown>[]) ?? []).map(normalizeReport);
+
+  // 5. Laporan terbaru
+  const { data: recentRaw } = await client
+    .from("reports")
+    .select(REPORT_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const recent = ((recentRaw as Record<string, unknown>[]) ?? []).map(normalizeReport);
+
+  return {
+    total: total ?? 0,
+    byStatus,
+    byCategory,
+    highPriority,
+    recent,
+  };
 }

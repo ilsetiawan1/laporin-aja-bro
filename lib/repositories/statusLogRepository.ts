@@ -31,7 +31,7 @@ export async function getStatusLogsByReportId(
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[statusLogRepo] getStatusLogsByReportId:", error.message);
+    console.error(error.message)
     return [];
   }
 

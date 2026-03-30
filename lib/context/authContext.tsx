@@ -19,10 +19,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     async function initAuth() {
-      // Step 1: Baca session dari cookie yang di-set server
-      const { data: { session } } = await supabase.auth.getSession();
+      // getUser() — secure, verify ke Auth server
+      const { data: { user: u } } = await supabase.auth.getUser();
       if (mounted) {
-        const u = session?.user;
         setUser(u ? { id: u.id, email: u.email ?? "" } : null);
         setLoading(false);
       }
@@ -30,7 +29,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    // Step 2: Listen perubahan (login/logout via client)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (mounted) {

@@ -1,33 +1,64 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-const PROTECTED_ROUTES = ["/lapor"];
-const ADMIN_ROUTES = ["/admin"];
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const accessToken = request.cookies.get("sb-access-token")?.value;
-  const isAuthenticated = !!accessToken;
 
-  // Protect /lapor – redirect to homepage with login modal
-  if (
-    !isAuthenticated &&
-    PROTECTED_ROUTES.some((r) => pathname.startsWith(r))
-  ) {
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          // Re-create response dengan cookie yang sudah di-refresh
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // getUser() — authenticate ke Supabase Auth server (bukan dari cookie langsung)
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
+
+  // Protect /lapor
+  if (!isAuthenticated && pathname.startsWith("/lapor")) {
     const loginUrl = new URL("/?modal=login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Protect /admin – redirect to homepage with login modal
-  if (
-    !isAuthenticated &&
-    ADMIN_ROUTES.some((r) => pathname.startsWith(r))
-  ) {
-    return NextResponse.redirect(new URL("/?modal=login", request.url));
+  // Protect /admin
+  if (pathname.startsWith("/admin")) {
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/?modal=login", request.url));
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
-  return NextResponse.next();
+  // WAJIB return supabaseResponse — jangan return NextResponse.next() baru
+  // karena cookie refresh token akan hilang
+  return supabaseResponse;
 }
 
 export const config = {
