@@ -12,6 +12,7 @@ import { getPriorityBadgeClass, getPriorityLabel } from "@/lib/utils/priorityCal
 import { createServerClient } from "@/lib/supabase/server";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
+import AiPanel from "@/components/admin/AiPanel";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -59,6 +60,7 @@ export default async function AdminReportDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-bg flex">
       <AdminSidebar fullName={profile.full_name ?? user.email ?? "Admin"} />
+      <AiPanel reportId={reportId} />
 
       <main className="flex-1 p-6 lg:p-8 overflow-auto">
         <div className="max-w-5xl mx-auto">
