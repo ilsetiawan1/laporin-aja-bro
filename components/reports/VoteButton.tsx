@@ -5,7 +5,7 @@
 // Upvote button dengan optimistic update
 // ============================================================
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
 import { toggleVoteAction } from "@/lib/actions/votes";
 import { getPriorityLabel, getPriorityBadgeClass } from "@/lib/utils/priorityCalculator";
@@ -37,6 +37,10 @@ export default function VoteButton({
   const [priorityScore, setPriorityScore] = useState(initialPriorityScore);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setHasVoted(initialHasVoted);
+  }, [initialHasVoted]);
+  
   const priority = getPriorityLabel(priorityScore) || initialPriority;
   const badgeClass = getPriorityBadgeClass(priority);
 
