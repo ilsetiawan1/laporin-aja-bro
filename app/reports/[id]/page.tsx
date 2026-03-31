@@ -193,7 +193,7 @@ export default async function ReportDetailPage({ params }: Props) {
             </div>
 
             {/* Comments */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8">
+            <div id="komentar" className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 scroll-mt-24">
               <ReportComments
                 reportId={report.id}
                 user={authUser ? { id: authUser.id } : null}
