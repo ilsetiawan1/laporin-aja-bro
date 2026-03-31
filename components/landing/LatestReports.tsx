@@ -20,7 +20,7 @@ export default async function LatestReports() {
   const reports = await getLatestReports();
 
   return (
-    <section id="laporan-terbaru" className="py-20 md:py-28 bg-bg">
+    <section id="reports" className="py-20 md:py-28 bg-bg">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
@@ -34,7 +34,7 @@ export default async function LatestReports() {
             </p>
           </div>
           <Link
-            href="/status"
+            href="/reports"
             id="latest-reports-see-all"
             className="btn-outline-dark shrink-0 text-sm"
           >
@@ -83,30 +83,7 @@ export default async function LatestReports() {
           <LatestReportsInteractive initialReports={reports} />
         )}
 
-        {/* Bottom CTA */}
-        {reports.length > 0 && (
-          <div className="text-center mt-10">
-            <Link
-              href="/status"
-              className="btn-outline-dark text-sm"
-            >
-              Lihat Semua Laporan
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            </Link>
-          </div>
-        )}
+
       </div>
     </section>
   );

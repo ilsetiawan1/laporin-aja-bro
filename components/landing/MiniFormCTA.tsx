@@ -14,7 +14,7 @@ export default function MiniFormCTA() {
   };
 
   return (
-    <section id="lapor" className="py-16 bg-bg relative overflow-hidden">
+    <section id="add-report" className="py-16 bg-bg relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-linear-to-r from-transparent via-blue/20 to-transparent" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-linear-to-r from-transparent via-blue/20 to-transparent" />
