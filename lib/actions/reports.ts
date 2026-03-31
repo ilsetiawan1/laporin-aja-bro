@@ -14,12 +14,14 @@ export async function getPublicReports(params: {
   search?: string;
   category?: string;
   city?: string;
+  district?: string;
   status?: string;
 }): Promise<ReportWithRelations[]> {
   const filters: ReportFilters = {
     search: params.search,
     category: params.category,
     city: params.city,
+    district: params.district,
     status: params.status,
     limit: 50,
   };
@@ -53,20 +55,7 @@ export async function submitReport(
     return { error: "Harap lengkapi semua field wajib." };
   }
 
-  const newReport = await reportService.createReport({
-    userId: user?.id ?? null,
-    title,
-    description,
-    category_id,
-    city_id,
-    district_id: district_id || null,
-    address: address || null,
-    is_anonymous,
-  });
-
-  if (!newReport) {
-    return { error: "Gagal mengirim laporan. Silakan coba lagi." };
-  }
+  const reportId = crypto.randomUUID();
 
   // Handle image uploads if any
   const imageFiles: File[] = [];
@@ -76,8 +65,26 @@ export async function submitReport(
     }
   }
 
+  let imageUrls: string[] = [];
   if (imageFiles.length > 0) {
-    await reportService.uploadReportImages(newReport.id, imageFiles);
+    imageUrls = await reportService.uploadReportImages(user?.id ?? null, reportId, imageFiles);
+  }
+
+  const newReport = await reportService.createReport({
+    id: reportId,
+    userId: user?.id ?? null,
+    title,
+    description,
+    category_id,
+    city_id,
+    district_id: district_id || null,
+    address: address || null,
+    is_anonymous,
+    image_urls: imageUrls,
+  });
+
+  if (!newReport) {
+    return { error: "Gagal mengirim laporan. Silakan coba lagi." };
   }
 
   return { success: true, reportId: newReport.id };

@@ -32,6 +32,7 @@ export async function getReportDetail(
 }
 
 export interface CreateReportPayload {
+  id?: string;
   userId: string | null;
   title: string;
   description: string;
@@ -55,6 +56,7 @@ export async function createReport(
   );
 
   const input: CreateReportInput = {
+    id: payload.id,
     user_id: payload.userId,
     title: payload.title,
     description: payload.description,
@@ -76,6 +78,7 @@ export async function createReport(
 }
 
 export async function uploadReportImages(
+  userId: string | null,
   reportId: string,
   files: File[]
 ): Promise<string[]> {
@@ -84,7 +87,8 @@ export async function uploadReportImages(
 
   for (const file of files) {
     const ext = file.name.split(".").pop() ?? "jpg";
-    const filename = `${reportId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const folderUser = userId || "anonymous";
+    const filename = `${folderUser}/${reportId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { error } = await supabase.storage
       .from("report_attachments")
@@ -102,10 +106,6 @@ export async function uploadReportImages(
     if (urlData?.publicUrl) {
       urls.push(urlData.publicUrl);
     }
-  }
-
-  if (urls.length > 0) {
-    await reportRepo.updateImageUrls(supabase, reportId, urls);
   }
 
   return urls;

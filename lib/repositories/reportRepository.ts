@@ -39,6 +39,7 @@ function normalizeReport(raw: Record<string, unknown>): ReportWithRelations {
     priority_score: (raw.priority_score as number) ?? 0,
     similar_count: (raw.similar_count as number) ?? 0,
     vote_count: (raw.vote_count as number) ?? 0,
+    comment_count: Array.isArray(raw.comments) && raw.comments.length > 0 ? (raw.comments[0] as {count: number}).count ?? 0 : ((raw.comments as {count: number} | null)?.count ?? 0),
     created_at: raw.created_at as string,
     categories: pickFirst(raw.categories as { name: string } | null),
     cities: pickFirst(raw.cities as { name: string } | null),
@@ -54,7 +55,8 @@ const REPORT_SELECT = `
   created_at,
   categories ( name ),
   cities ( name ),
-  districts ( name )
+  districts ( name ),
+  comments ( count )
 `;
 
 export async function getReports(
@@ -75,6 +77,9 @@ export async function getReports(
   }
   if (filters?.city) {
     query = query.eq("city_id", filters.city);
+  }
+  if (filters?.district) {
+    query = query.eq("district_id", filters.district);
   }
   if (filters?.category) {
     query = query.eq("category_id", filters.category);
@@ -120,6 +125,7 @@ export async function createReport(
   const { data: newReport, error } = await client
     .from("reports")
     .insert({
+      id: data.id,
       user_id: data.user_id,
       title: data.title,
       description: data.description,

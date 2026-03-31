@@ -18,7 +18,18 @@ export async function getCategories(): Promise<Category[]> {
     console.error("[locationRepo] getCategories:", error.message);
     return [];
   }
-  return data ?? [];
+
+  const uniqueData: Category[] = [];
+  const seen = new Set<string>();
+
+  for (const cat of (data ?? [])) {
+    if (!seen.has(cat.name)) {
+      seen.add(cat.name);
+      uniqueData.push(cat);
+    }
+  }
+
+  return uniqueData;
 }
 
 export async function getCities(): Promise<City[]> {

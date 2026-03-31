@@ -26,6 +26,7 @@ export interface Report {
   priority_score: number;
   similar_count: number;
   vote_count: number;
+  comment_count: number;
   created_at: string;
 }
 
@@ -120,6 +121,7 @@ export interface ReportStatusLog {
 // === Input / DTO Types ===
 
 export interface CreateReportInput {
+  id?: string;
   user_id: string | null;
   title: string;
   description: string;
@@ -150,6 +152,7 @@ export interface ReportFilters {
   search?: string;
   category?: string;
   city?: string;
+  district?: string;
   status?: string;
   userId?: string;
   limit?: number;
