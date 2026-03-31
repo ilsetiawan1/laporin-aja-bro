@@ -12,16 +12,40 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
   const router = useRouter();
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeHash, setActiveHash] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    // Intersection Observer for highlighting menu based on scroll position
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveHash(`#${entry.target.id}`);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -79% 0px" }
+    );
+
+    const sections = ["hero", "add-report", "reports", "faq"]
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+      
+    sections.forEach((s) => s && observer.observe(s));
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      sections.forEach((s) => s && observer.unobserve(s));
+    };
   }, []);
 
   const navLinks = [
     { label: "Beranda", href: "/#hero" },
-    { label: "Lapor", href: "/#lapor" },
+    { label: "Lapor", href: "/#add-report" },
+    { label: "Laporan Terbaru", href: "/#reports" },
     { label: "FAQ", href: "/#faq" },
   ];
 
@@ -69,15 +93,22 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-white/75 hover:text-white font-medium text-sm px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-200"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === "/" && activeHash === link.href.replace("/", "");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-medium text-sm px-3 py-2 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "text-orange bg-white/5 shadow-inner"
+                      : "text-white/75 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* CTA Buttons */}
@@ -177,16 +208,23 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
         }`}
       >
         <div className="px-4 py-4 flex flex-col gap-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setIsMenuOpen(false)}
-              className="text-white/80 hover:text-white hover:bg-white/10 font-medium text-sm px-3 py-2.5 rounded-lg transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = pathname === "/" && activeHash === link.href.replace("/", "");
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMenuOpen(false)}
+                className={`font-medium text-sm px-3 py-2.5 rounded-lg transition-colors ${
+                  isActive
+                    ? "text-orange bg-white/10"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <div className="flex gap-3 pt-3 mt-2 border-t border-white/15">
             {!initialProfile ? (
               <>
