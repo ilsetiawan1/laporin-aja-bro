@@ -26,6 +26,11 @@ export default async function ProfilePage() {
     return <div className="p-8 text-center">Gagal memuat profil.</div>;
   }
 
+  // Inject email from auth session because profiles might not have synced it
+  if (user.email) {
+    profile.email = user.email;
+  }
+
   return (
     <main className="flex flex-col min-h-screen bg-bg">
       <Navbar />
