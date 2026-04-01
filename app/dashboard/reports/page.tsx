@@ -34,26 +34,42 @@ export default async function ReportsPage() {
 
 
   return (
-    <main className="flex flex-col min-h-screen bg-bg">
+<main className="flex flex-col min-h-screen bg-bg">
       <Navbar />
       <div className="flex-1 max-w-4xl w-full mx-auto px-4 py-24">
         <div className="bg-white/80 rounded-3xl p-6 sm:p-10 shadow-xl border border-navy/5 backdrop-blur-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10">
-            <div className="flex justify-between items-end mb-8 border-b border-navy/10 pb-6">
+            {/* Header dengan Tombol Kembali */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 border-b border-navy/10 pb-6 gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-navy mb-2">Laporan Saya</h1>
-                <p className="text-navy/60 text-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  {/* Button Kembali */}
+                  <Link 
+                    href="/" 
+                    className="p-2 -ml-2 rounded-lg hover:bg-navy/5 text-navy/40 hover:text-navy transition-colors group"
+                    title="Kembali ke Beranda"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </Link>
+                  <h1 className="text-2xl font-bold text-navy">Laporan Saya</h1>
+                </div>
+                <p className="text-navy/60 text-sm ml-8 sm:ml-0">
                   Pantau status dan riwayat pelaporan Anda.
                 </p>
               </div>
-              <Link
-                href="/#lapor"
-                className="btn-primary px-5 py-2.5 text-sm hidden sm:block"
-              >
-                + Buat Laporan
-              </Link>
+              
+              <div className="flex gap-3 w-full sm:w-auto">
+                <Link
+                  href="/#lapor"
+                  className="btn-primary flex-1 sm:flex-none px-5 py-2.5 text-sm text-center"
+                >
+                  + Buat Laporan
+                </Link>
+              </div>
             </div>
 
             {reports.length === 0 ? (
