@@ -72,20 +72,28 @@ export default function ReportFilters({
     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 mb-6 shadow-md shadow-navy/10 relative z-20">
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/35" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFocus={() => setFilterOpen(true)}
-            placeholder="Cari laporan..."
-            className="input-field pl-9 transition-all duration-300 w-full"
-            id="shared-search"
-          />
-        </div>
+<div className="relative flex-1 group">
+  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+    <svg 
+      className="w-4 h-4 text-navy/35 group-focus-within:text-blue transition-colors" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor" 
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  </div>
+  <input
+    type="text"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    onFocus={() => setFilterOpen(true)}
+    placeholder="Cari laporan..."
+    className="input-field !pl-10 w-full transition-all duration-300"
+    id="shared-search"
+  />
+</div>
 
         {/* Toggle Filter Button */}
         <button

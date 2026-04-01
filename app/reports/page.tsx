@@ -4,7 +4,7 @@ import ReportList from "@/components/reports/ReportList";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Status Laporan – Laporin Aja Bro",
+  title: "Laporan Terkini – Laporin Aja Bro",
   description:
     "Lihat dan cari laporan publik dari masyarakat Daerah Istimewa Yogyakarta.",
 };
@@ -14,7 +14,7 @@ export default function StatusPage() {
     <main className="flex flex-col min-h-screen">
       <Navbar />
 
-      <div className="flex-1 bg-bg pt-24 pb-16">
+      <div className="flex-1 bg-bg pb-16 pt-16 md:pt-20">
         {/* Hero Banner */}
         <div className="bg-navy pt-12 pb-28 px-4 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
@@ -31,7 +31,7 @@ export default function StatusPage() {
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <span className="section-label-light">📋 Laporan Publik</span>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-3">
-              Status Laporan
+              Laporan Terkini
             </h1>
             <p className="text-white/65 text-base max-w-md mx-auto">
               Cari dan pantau laporan publik dari masyarakat DIY. Transparan,
