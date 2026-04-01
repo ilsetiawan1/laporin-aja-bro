@@ -90,7 +90,7 @@ export default function ReportFilters({
     onChange={(e) => setSearch(e.target.value)}
     onFocus={() => setFilterOpen(true)}
     placeholder="Cari laporan..."
-    className="input-field !pl-10 w-full transition-all duration-300"
+    className="input-field pl-10! w-full transition-all duration-300"
     id="shared-search"
   />
 </div>
