@@ -56,7 +56,8 @@ const REPORT_SELECT = `
   categories ( name ),
   cities ( name ),
   districts ( name ),
-  comments ( count )
+  comments ( count ),
+  profiles ( full_name, avatar_url )
 `;
 
 export async function getReports(
@@ -104,9 +105,7 @@ export async function getReportById(
 ): Promise<ReportWithRelations | null> {
   const { data, error } = await client
     .from("reports")
-    .select(
-      `${REPORT_SELECT}, profiles ( full_name, avatar_url )`
-    )
+    .select(REPORT_SELECT)
     .eq("id", id)
     .single();
 
