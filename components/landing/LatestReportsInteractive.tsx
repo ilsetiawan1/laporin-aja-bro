@@ -1,3 +1,5 @@
+// components\landing\LatestReportsInteractive.tsx:
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -172,6 +174,15 @@ export default function LatestReportsInteractive({
                 </Link>
 
                 <div className="space-y-1 mt-auto">
+                  {/* Nama pelapor */}
+                  <p className="text-navy/40 text-xs">
+                    Oleh{" "}
+                    <span className="font-medium">
+                      {report.is_anonymous
+                        ? "Warga Baik"
+                        : (report.profiles?.full_name ?? "Pengguna")}
+                    </span>
+                  </p>
                   {report.cities?.name && (
                     <p className="text-navy/45 text-xs flex items-center gap-1.5">
                       <svg className="w-3 h-3 shrink-0 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -194,7 +205,7 @@ export default function LatestReportsInteractive({
                       <div className="flex items-center gap-2">
                         <Link href={`/reports/${report.id}#komentar`} className="flex items-center gap-1 text-navy/40 hover:text-blue transition-colors" title="Komentar">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                           <span className="text-[10px] font-medium">{report.comment_count || 0}</span>
                         </Link>

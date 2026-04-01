@@ -68,7 +68,7 @@ export default async function ReportDetailPage({ params }: Props) {
         <div className="flex items-center gap-2 text-xs text-navy/40 mb-6">
           <Link href="/" className="hover:text-navy/70 transition-colors">Beranda</Link>
           <span>/</span>
-          <Link href="/status" className="hover:text-navy/70 transition-colors">Status Laporan</Link>
+          <Link href="/status" className="hover:text-navy/70 transition-colors">Laporan Terkini</Link>
           <span>/</span>
           <span className="text-navy/70 line-clamp-1">{report.title}</span>
         </div>
