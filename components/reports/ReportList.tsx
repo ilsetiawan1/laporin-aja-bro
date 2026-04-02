@@ -30,6 +30,20 @@ const STATUS_LABELS: Record<string, string> = {
   ditolak: "Ditolak",
 };
 
+function stringToGradient(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 60%, 75%), hsl(${h2}, 70%, 60%))`;
+}
+
+function getTitleInitial(title: string): string {
+  return title.trim().charAt(0).toUpperCase();
+}
+
 export default function ReportList() {
   const [reports, setReports] = useState<ReportWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -183,6 +197,15 @@ export default function ReportList() {
                 </Link>
 
                 <div className="space-y-1 mt-auto pt-2 border-t border-slate-50">
+                  {/* Nama pelapor */}
+                  <span className="block text-navy/40 text-xs">
+                    Oleh{" "}
+                    <span className="font-medium text-navy/60">
+                      {report.is_anonymous
+                        ? "Anonim"
+                        : (report.profiles?.full_name ?? "Pengguna")}
+                    </span>
+                  </span>
                   {report.cities?.name && (
                     <p className="text-navy/45 text-xs flex items-center gap-1.5">
                       <svg className="w-3 h-3 shrink-0 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
