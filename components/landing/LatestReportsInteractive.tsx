@@ -13,6 +13,22 @@ import VoteButton from "@/components/reports/VoteButton";
 import ReportFilters from "@/components/reports/ReportFilters";
 import { getPriorityBadgeClass, getPriorityLabel } from "@/lib/utils/priorityCalculator";
 
+// Generate warna unik dari string (gratis, no API)
+function stringToGradient(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 60%, 75%), hsl(${h2}, 70%, 60%))`;
+}
+
+// Ambil inisial dari judul
+function getTitleInitial(title: string): string {
+  return title.trim().charAt(0).toUpperCase();
+}
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "Menunggu",
   diproses: "Diproses",
@@ -151,19 +167,22 @@ export default function LatestReportsInteractive({
 
                 <Link href={`/reports/${report.id}`} className="flex-1 block relative mb-3 group/link">
                   {/* Thumbnail */}
-                  <div className="w-full h-32 mb-3 bg-slate-50 rounded-xl overflow-hidden relative flex items-center justify-center">
+                  <div className="w-full h-32 mb-3 rounded-xl overflow-hidden relative flex items-center justify-center">
                     {report.image_urls && report.image_urls.length > 0 ? (
-                      <Image 
-                        src={report.image_urls[0]} 
-                        alt={report.title} 
-                        fill 
-                        className="object-cover transition-transform duration-300 group-hover/link:scale-105" 
+                      <Image
+                        src={report.image_urls[0]}
+                        alt={report.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover/link:scale-105"
                       />
                     ) : (
-                      <div className="text-orange/20 w-full h-full flex items-center justify-center bg-orange/5">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
-                        </svg>
+                      <div
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ background: stringToGradient(report.title + report.description) }}
+                      >
+                        <span className="text-white text-3xl font-bold opacity-80 drop-shadow">
+                          {getTitleInitial(report.title)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -175,14 +194,14 @@ export default function LatestReportsInteractive({
 
                 <div className="space-y-1 mt-auto">
                   {/* Nama pelapor */}
-                  <p className="text-navy/40 text-xs">
+                  <span className="block text-navy/40 text-xs">
                     Oleh{" "}
-                    <span className="font-medium">
+                    <span className="font-medium text-navy/60">
                       {report.is_anonymous
-                        ? "Warga Baik"
+                        ? "Anonim"
                         : (report.profiles?.full_name ?? "Pengguna")}
                     </span>
-                  </p>
+                  </span>
                   {report.cities?.name && (
                     <p className="text-navy/45 text-xs flex items-center gap-1.5">
                       <svg className="w-3 h-3 shrink-0 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
