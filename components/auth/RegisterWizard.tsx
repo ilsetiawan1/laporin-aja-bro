@@ -264,19 +264,25 @@ export default function RegisterWizard({ onGoToLogin }: RegisterWizardProps) {
                   transition={{ type: "tween", duration: 0.2 }}
                   className="space-y-4 min-h-[300px]"
                 >
-                  <div>
-                    <label className="block text-sm font-semibold text-navy mb-1.5">NIK KTP (16 Digit)</label>
-                    <input
-                      name="nik"
-                      type="text"
-                      required
-                      maxLength={16}
-                      value={formData.nik}
-                      onChange={handleChange}
-                      placeholder="3404XXXXXXXXXXXX"
-                      className="input-field"
-                    />
-                  </div>
+              <div>
+                <div className="flex justify-between items-end mb-1.5">
+                  <label className="block text-sm font-semibold text-navy">NIK KTP (16 Digit)</label>
+                  <span className={`text-[10px] font-medium ${formData.nik.length === 16 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {formData.nik.length}/16
+                  </span>
+                </div>
+                
+                <input
+                  name="nik"
+                  type="text"
+                  required
+                  maxLength={16}
+                  value={formData.nik}
+                  onChange={handleChange}
+                  placeholder="3404XXXXXXXXXXXX"
+                  className="input-field w-full"
+                />
+              </div>
                   <div>
                     <label className="block text-sm font-semibold text-navy mb-1.5">Nama Lengkap</label>
                     <input
@@ -387,7 +393,7 @@ export default function RegisterWizard({ onGoToLogin }: RegisterWizardProps) {
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="flex-1 py-3 text-base btn-outline justify-center border-navy/20 hover:border-navy text-navy"
+                  className="flex-1 py-3 text-base btn-primary border justify-center"
                   disabled={isPending}
                 >
                   Kembali
