@@ -49,7 +49,7 @@ export async function registerAction(
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
-  
+
   const nik = formData.get("nik") as string;
   const fullName = formData.get("full_name") as string;
   const phoneNumber = formData.get("phone_number") as string;
@@ -59,7 +59,17 @@ export async function registerAction(
   const districtId = formData.get("district_id") as string;
   const avatarUrl = formData.get("avatar") as string | null;
 
-  if (!email || !password || !nik || !fullName || !phoneNumber || !gender || !cityId || !districtId) {
+  // ── Validasi field wajib ──────────────────────────────────────
+  if (
+    !email ||
+    !password ||
+    !nik ||
+    !fullName ||
+    !phoneNumber ||
+    !gender ||
+    !cityId ||
+    !districtId
+  ) {
     return { error: "Semua kolom wajib diisi kecuali dinyatakan opsional." };
   }
 
@@ -77,7 +87,33 @@ export async function registerAction(
 
   const supabase = await createServerClient();
 
-  // 1. Sign Up User (Profiles table generated via schema trigger)
+  // ── FIX: Cek duplikat NIK & phone SEBELUM buat akun ──────────
+  // Dengan begitu signUp() tidak pernah dipanggil jika data sudah ada,
+  // sehingga tidak ada sesi login yang bocor / akun ghost.
+
+  const { data: existingNik } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("nik", nik)
+    .maybeSingle();
+
+  if (existingNik) {
+    return {
+      error: "NIK ini sudah terdaftar. Gunakan NIK lain atau hubungi admin.",
+    };
+  }
+
+  const { data: existingPhone } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("phone_number", phoneNumber)
+    .maybeSingle();
+
+  if (existingPhone) {
+    return { error: "Nomor telepon ini sudah terdaftar." };
+  }
+
+  // ── Buat akun Auth ────────────────────────────────────────────
   const { data: authData, error } = await supabase.auth.signUp({
     email,
     password,
@@ -89,7 +125,10 @@ export async function registerAction(
   });
 
   if (error) {
-    if (error.message.includes("already registered") || error.message.includes("User already registered")) {
+    if (
+      error.message.includes("already registered") ||
+      error.message.includes("User already registered")
+    ) {
       return { error: "Email sudah terdaftar. Silakan login." };
     }
     return { error: `Gagal mendaftar: ${error.message}` };
@@ -99,6 +138,7 @@ export async function registerAction(
     return { error: "Gagal mendaftar. Silakan coba lagi." };
   }
 
+  // ── Update profil ─────────────────────────────────────────────
   try {
     const { error: profileError } = await supabase
       .from("profiles")
@@ -116,11 +156,30 @@ export async function registerAction(
 
     if (profileError) {
       console.error("Failed to update profile:", profileError.message);
+
+      // Sign out paksa agar sesi tidak bocor jika update profil gagal
+      await supabase.auth.signOut();
+
+      if (profileError.message.includes("profiles_nik_key")) {
+        return {
+          error:
+            "NIK ini sudah terdaftar. Gunakan NIK lain atau hubungi admin.",
+        };
+      }
+      if (profileError.message.includes("profiles_phone_number_key")) {
+        return { error: "Nomor telepon ini sudah terdaftar." };
+      }
+
       return { error: `Gagal menyimpan biodata: ${profileError.message}` };
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Exception during profile update:", err);
-    return { error: `Terjadi kesalahan saat menyimpan biodata: ${err.message || 'Unknown error'}` };
+
+    // Sign out paksa juga saat exception tak terduga
+    await supabase.auth.signOut();
+
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { error: `Terjadi kesalahan saat menyimpan biodata: ${message}` };
   }
 
   return {
@@ -134,13 +193,16 @@ export async function logoutAction() {
 
   revalidatePath("/", "layout");
   redirect("/");
-} 
+}
 
 /**
  * Get current authenticated user — for server components/pages
  * Returns null if not authenticated
  */
-export async function getAuthUser(): Promise<{ id: string; email: string } | null> {
+export async function getAuthUser(): Promise<{
+  id: string;
+  email: string;
+} | null> {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -150,4 +212,3 @@ export async function getAuthUser(): Promise<{ id: string; email: string } | nul
 
   return { id: user.id, email: user.email ?? "" };
 }
-
