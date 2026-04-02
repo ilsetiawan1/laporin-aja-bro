@@ -20,22 +20,19 @@ interface LaporFormProps {
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
-  infrastruktur: "🏗️",
-  sampah: "🗑️",
-  lingkungan: "🌿",
-  keamanan: "🛡️",
-  kesehatan: "🏥",
-  pendidikan: "📚",
-  transportasi: "🚌",
-  lainnya: "📋",
+  "Infrastruktur & Jalan": "🚧",
+  "Penerangan Jalan": "💡",
+  "Pungli & Gratifikasi": "💸",
+  "Keamanan & Kriminal": "🛡️",
+  "Kesehatan": "🏥",
+  "Sampah & Lingkungan": "🗑️",
+  "Pelayanan Publik": "🏢",
+  "Fasilitas Pendidikan": "📚",
+  "Lainnya": "📋",
 };
 
 function getCategoryIcon(name: string): string {
-  const key = name.toLowerCase();
-  for (const [k, v] of Object.entries(CATEGORY_ICONS)) {
-    if (key.includes(k)) return v;
-  }
-  return "📋";
+  return CATEGORY_ICONS[name] ?? "📋"; // ✅ exact match, lebih efisien
 }
 
 export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
@@ -90,17 +87,25 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
   }, []);
 
   // Load categories + cities via server actions (no direct supabase)
-  useEffect(() => {
-    async function loadData() {
-      const [cats, cits] = await Promise.all([
-        getCategories(),
-        getCities(),
-      ]);
-      setCategories(cats);
-      setCities(cits);
-    }
-    loadData();
-  }, []);
+useEffect(() => {
+  async function loadData() {
+    const [cats, cits] = await Promise.all([
+      getCategories(),
+      getCities(),
+    ]);
+
+    // --- LOGIKA SORTING DISINI ---
+    const sortedCategories = [...cats].sort((a, b) => {
+      if (a.name === "Lainnya") return 1;  // Pindahkan "Lainnya" ke bawah
+      if (b.name === "Lainnya") return -1; // Jaga yang lain tetap di atas
+      return a.name.localeCompare(b.name); // Sisanya urutkan sesuai abjad A-Z
+    });
+
+    setCategories(sortedCategories);
+    setCities(cits);
+  }
+  loadData();
+}, []);
 
   // Load districts when city changes via server action
   useEffect(() => {
@@ -267,14 +272,23 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
                 disabled={isPending}
               >
                 <option value="" className="bg-[#1a1f2e]">Pilih kategori...</option>
+                
                 {categories.length === 0 && (
                   <option disabled className="bg-[#1a1f2e]">Memuat...</option>
                 )}
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id} className="bg-[#1a1f2e]">
-                    {getCategoryIcon(cat.name)} {cat.name}
-                  </option>
-                ))}
+
+                {/* LOGIKA SORTING LANGSUNG DI SINI */}
+                {[...categories]
+                  .sort((a, b) => {
+                    if (a.name === "Lainnya") return 1;  // Pindahkan ke bawah
+                    if (b.name === "Lainnya") return -1; // Jaga yang lain tetap di atas
+                    return a.name.localeCompare(b.name); // Urutkan sisanya A-Z
+                  })
+                  .map((cat) => (
+                    <option key={cat.id} value={cat.id} className="bg-[#1a1f2e]">
+                      {getCategoryIcon(cat.name)} {cat.name}
+                    </option>
+                  ))}
               </select>
               <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/30">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
