@@ -44,7 +44,7 @@ function getTitleInitial(title: string): string {
   return title.trim().charAt(0).toUpperCase();
 }
 
-export default function ReportList() {
+export default function ReportList({ initialSearch = "" }: { initialSearch?: string }) {
   const [reports, setReports] = useState<ReportWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -52,7 +52,7 @@ export default function ReportList() {
   const { user, loading: authLoading } = useAuth();
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterCity, setFilterCity] = useState("");
@@ -176,11 +176,11 @@ export default function ReportList() {
                   {/* Thumbnail */}
                   <div className="w-full h-32 mb-3 bg-slate-50 rounded-xl overflow-hidden relative flex items-center justify-center">
                     {report.image_urls && report.image_urls.length > 0 ? (
-                      <Image 
-                        src={report.image_urls[0]} 
-                        alt={report.title} 
-                        fill 
-                        className="object-cover transition-transform duration-300 group-hover/link:scale-105" 
+                      <Image
+                        src={report.image_urls[0]}
+                        alt={report.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover/link:scale-105"
                       />
                     ) : (
                       <div className="text-orange/20 w-full h-full flex items-center justify-center bg-orange/5">
@@ -190,7 +190,7 @@ export default function ReportList() {
                       </div>
                     )}
                   </div>
-                  
+
                   <h3 className="text-navy font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue transition-colors">
                     {report.title}
                   </h3>
@@ -228,7 +228,7 @@ export default function ReportList() {
                       <div className="flex items-center gap-2">
                         <Link href={`/reports/${report.id}#komentar`} className="flex items-center gap-1 text-navy/40 hover:text-blue transition-colors" title="Komentar">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                           <span className="text-[10px] font-medium">{report.comment_count || 0}</span>
                         </Link>

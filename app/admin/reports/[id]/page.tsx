@@ -13,6 +13,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import AiPanel from "@/components/admin/AiPanel";
+import AdminReportSidebar from "@/components/admin/AdminReportSidebar";
+
 
 interface Props {
   params: Promise<{ id: string }>;

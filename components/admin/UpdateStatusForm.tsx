@@ -1,10 +1,5 @@
 "use client";
 
-// ============================================================
-// components/admin/UpdateStatusForm.tsx
-// Form untuk admin mengubah status laporan + catatan
-// ============================================================
-
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateStatusAction } from "@/lib/actions/statusLogs";

@@ -9,11 +9,16 @@ export const metadata = {
     "Lihat dan cari laporan publik dari masyarakat Daerah Istimewa Yogyakarta.",
 };
 
-export default function StatusPage() {
+export default async function StatusPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
+
   return (
     <main className="flex flex-col min-h-screen">
       <Navbar />
-
       <div className="flex-1 bg-bg pt-24 pb-16">
         {/* Hero Banner */}
         <div className="bg-navy pt-12 pb-28 px-4 sm:px-6 relative overflow-hidden">
@@ -57,10 +62,9 @@ export default function StatusPage() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
-          <ReportList />
+          <ReportList initialSearch={search ?? ""} />
         </div>
       </div>
-
       <Footer />
     </main>
   );
