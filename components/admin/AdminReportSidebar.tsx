@@ -9,6 +9,7 @@ interface Props {
   reportId: string;
   currentStatus: string;
   initialLogs: ReportStatusLog[];
+  onStatusChange?: (newStatus: string) => void;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -24,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
   ditolak: "Ditolak",
 };
 
-export default function AdminReportSidebar({ reportId, currentStatus, initialLogs }: Props) {
+export default function AdminReportSidebar({ reportId, currentStatus, initialLogs, onStatusChange }: Props) {
   const [liveStatus, setLiveStatus] = useState(currentStatus);
 
   return (
@@ -68,6 +69,7 @@ export default function AdminReportSidebar({ reportId, currentStatus, initialLog
           reportId={reportId}
           initialLogs={initialLogs}
           initialStatus={liveStatus}
+          onStatusChange={(newStatus) => setLiveStatus(newStatus)}
         />
       </div>
     </div>

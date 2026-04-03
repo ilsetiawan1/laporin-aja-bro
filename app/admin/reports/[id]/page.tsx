@@ -35,6 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default async function AdminReportDetailPage({ params }: Props) {
   const { id: reportId } = await params;
+  
 
   // Auth + admin check
   const supabase = await createServerClient();
@@ -200,38 +201,11 @@ export default async function AdminReportDetailPage({ params }: Props) {
               </div>
             </div>
 
-            {/* ── Sidebar Actions (1/3) ── */}
-            <div className="space-y-4">
-
-              {/* Update Status */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-7 h-7 rounded-lg bg-orange/10 flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-bold text-navy">Kelola Status</h3>
-                </div>
-                <UpdateStatusForm
-                  reportId={report.id}
-                  currentStatus={report.status}
-                />
-              </div>
-
-              {/* Status Timeline */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-7 h-7 rounded-lg bg-blue/10 flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-bold text-navy">Riwayat Status</h3>
-                </div>
-                <StatusTimeline logs={statusLogs} currentStatus={report.status} />
-              </div>
-            </div>
+            <AdminReportSidebar
+              reportId={report.id}
+              currentStatus={report.status}
+              initialLogs={statusLogs}
+            />
           </div>
         </div>
       </main>
