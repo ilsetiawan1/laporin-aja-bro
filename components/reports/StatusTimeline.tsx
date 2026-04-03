@@ -21,15 +21,15 @@ const STATUS_CONFIG: Record<
   }
 > = {
   pending: {
-    label: "Laporan Diterima",
-    shortLabel: "Diterima",
+    label: "Pending",
+    shortLabel: "Pending",
     color: "text-amber-700",
     bgColor: "bg-amber-50",
     borderColor: "border-amber-300",
     dotColor: "bg-amber-400",
     Icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -113,8 +113,8 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
                 currentStatus === "pending"
                   ? "0%"
                   : currentStatus === "diproses"
-                  ? "50%"
-                  : "calc(100% - 2rem)",
+                    ? "50%"
+                    : "calc(100% - 2rem)",
             }}
           />
 
@@ -128,11 +128,10 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
               <div key={status} className="flex flex-col items-center gap-2 z-10">
                 {/* Step circle */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                    isReached
-                      ? `${cfg.dotColor} border-transparent text-white shadow-sm`
-                      : "bg-white border-navy/20 text-navy/30"
-                  } ${isCurrent ? "ring-4 ring-offset-2 ring-blue/30" : ""}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isReached
+                    ? `${cfg.dotColor} border-transparent text-white shadow-sm`
+                    : "bg-white border-navy/20 text-navy/30"
+                    } ${isCurrent ? "ring-4 ring-offset-2 ring-blue/30" : ""}`}
                 >
                   {isReached ? (
                     <cfg.Icon className="w-4 h-4" />
@@ -146,9 +145,8 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
                 {/* Label */}
                 <div className="text-center">
                   <p
-                    className={`text-xs font-bold ${
-                      isCurrent ? cfg.color : isReached ? "text-navy/60" : "text-navy/30"
-                    }`}
+                    className={`text-xs font-bold ${isCurrent ? cfg.color : isReached ? "text-navy/60" : "text-navy/30"
+                      }`}
                   >
                     {cfg.shortLabel}
                   </p>
@@ -180,11 +178,10 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
               <div className="flex flex-col items-center">
                 {/* Dot */}
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 ${
-                    log
-                      ? `${cfg.dotColor} border-transparent text-white`
-                      : "bg-navy/5 border-navy/20 text-navy/25"
-                  } ${isActive ? "shadow-md ring-4 ring-offset-1 ring-blue/20" : ""}`}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center border-2 shrink-0 ${log
+                    ? `${cfg.dotColor} border-transparent text-white`
+                    : "bg-navy/5 border-navy/20 text-navy/25"
+                    } ${isActive ? "shadow-md ring-4 ring-offset-1 ring-blue/20" : ""}`}
                 >
                   <cfg.Icon className="w-4 h-4" />
                 </div>
@@ -197,18 +194,16 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
               {/* Content */}
               <div className={`flex-1 pb-6 ${isLast ? "pb-0" : ""}`}>
                 <div
-                  className={`rounded-xl p-4 border ${
-                    log
-                      ? `${cfg.bgColor} ${cfg.borderColor}`
-                      : "bg-navy/3 border-dashed border-navy/15"
-                  }`}
+                  className={`rounded-xl p-4 border ${log
+                    ? `${cfg.bgColor} ${cfg.borderColor}`
+                    : "bg-navy/3 border-dashed border-navy/15"
+                    }`}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h4
-                      className={`text-sm font-bold ${
-                        log ? cfg.color : "text-navy/30"
-                      }`}
+                      className={`text-sm font-bold ${log ? cfg.color : "text-navy/30"
+                        }`}
                     >
                       {cfg.label}
                     </h4>

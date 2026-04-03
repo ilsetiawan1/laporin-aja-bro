@@ -108,11 +108,21 @@ export default async function AdminReportDetailPage({ params }: Props) {
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}`}>
                       {priority.charAt(0).toUpperCase() + priority.slice(1)}
                     </span>
-                    {report.is_anonymous && (
-                      <span className="text-xs text-orange bg-orange/10 px-2.5 py-1 rounded-full font-semibold">
+                    {report.is_anonymous ? (
+                      <span className="flex items-center gap-1.5 text-orange">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                         Anonim
                       </span>
-                    )}
+                    ) : report.profiles?.full_name ? (
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {report.profiles.full_name}
+                      </span>
+                    ) : null}
                   </div>
 
                   <h1 className="text-xl font-bold text-navy mb-4">{report.title}</h1>
