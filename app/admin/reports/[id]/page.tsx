@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default async function AdminReportDetailPage({ params }: Props) {
   const { id: reportId } = await params;
-  
+
 
   // Auth + admin check
   const supabase = await createServerClient();
@@ -63,7 +63,6 @@ export default async function AdminReportDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-bg flex">
       <AdminSidebar fullName={profile.full_name ?? user.email ?? "Admin"} />
-      <AiPanel reportId={reportId} />
 
       <main className="flex-1 p-6 lg:p-8 overflow-auto">
         <div className="max-w-5xl mx-auto">
@@ -199,6 +198,8 @@ export default async function AdminReportDetailPage({ params }: Props) {
                   </div>
                 )}
               </div>
+              <AiPanel reportId={reportId} />
+
             </div>
 
             <AdminReportSidebar
