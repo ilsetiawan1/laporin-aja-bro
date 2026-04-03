@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
+import ImageLightbox from "@/components/ui/ImageLightbox";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-400/15 text-yellow-700 border-yellow-400/30",
@@ -177,15 +178,7 @@ export default async function ReportDetailPage({ params }: Props) {
               {report.image_urls && report.image_urls.length > 0 && (
                 <div className="p-6 sm:p-8 border-b border-slate-100">
                   <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {report.image_urls.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                        <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 hover:opacity-90 transition-opacity">
-                          <Image src={url} alt={`Bukti ${i + 1}`} fill className="object-cover" />
-                        </div>
-                      </a>
-                    ))}
-                  </div>
+                  <ImageLightbox images={report.image_urls} />
                 </div>
               )}
 

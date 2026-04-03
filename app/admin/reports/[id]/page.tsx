@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import AiPanel from "@/components/admin/AiPanel";
 import AdminReportSidebar from "@/components/admin/AdminReportSidebar";
-
+import ImageLightbox from "@/components/ui/ImageLightbox";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -186,24 +186,12 @@ export default async function AdminReportDetailPage({ params }: Props) {
                       Bukti Foto
                     </h3>
                     <div className="grid grid-cols-3 gap-2">
-                      {report.image_urls.map((url, i) => (
-                        <a
-                          key={i}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block"
-                        >
-                          <div className="relative aspect-video rounded-xl overflow-hidden hover:opacity-80 transition-opacity">
-                            <Image
-                              src={url}
-                              alt={`Bukti ${i + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        </a>
-                      ))}
+                      {report.image_urls && report.image_urls.length > 0 && (
+                        <div className="p-6 sm:p-8 border-b border-slate-100">
+                          <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
+                          <ImageLightbox images={report.image_urls} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
