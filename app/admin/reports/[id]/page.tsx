@@ -181,18 +181,9 @@ export default async function AdminReportDetailPage({ params }: Props) {
 
                 {/* Foto */}
                 {report.image_urls && report.image_urls.length > 0 && (
-                  <div className="px-6 pb-6">
-                    <h3 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">
-                      Bukti Foto
-                    </h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      {report.image_urls && report.image_urls.length > 0 && (
-                        <div className="p-6 sm:p-8 border-b border-slate-100">
-                          <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
-                          <ImageLightbox images={report.image_urls} />
-                        </div>
-                      )}
-                    </div>
+                  <div className="p-6 sm:p-8 border-b border-slate-100">
+                    <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
+                    <ImageLightbox images={report.image_urls} />
                   </div>
                 )}
               </div>

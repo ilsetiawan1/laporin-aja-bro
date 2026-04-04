@@ -20,12 +20,11 @@ export default function RealtimeStatusTimeline({
 }: RealtimeStatusTimelineProps) {
   const [logs, setLogs] = useState<ReportStatusLog[]>(initialLogs);
 
-  const [currentStatus, setCurrentStatus] = useState(() => {
-    if (initialLogs.length > 0) {
-      return initialLogs[initialLogs.length - 1].status;
-    }
-    return initialStatus;
-  });
+  // Derive currentStatus langsung dari logs — tidak pakai state terpisah
+  // Ini mencegah konflik antara dua source of truth
+  const currentStatus = logs.length > 0
+    ? logs[logs.length - 1].status
+    : initialStatus;
 
   useEffect(() => {
     const channel = supabase
@@ -38,20 +37,20 @@ export default function RealtimeStatusTimeline({
       }, (payload) => {
         const newLog = payload.new as ReportStatusLog;
 
-        // Dedupe
+        // 1. Update logs local state
         setLogs((prev) => {
           if (prev.find((l) => l.id === newLog.id)) return prev;
           return [...prev, newLog];
         });
 
-        setCurrentStatus(newLog.status);
-        onStatusChange?.(newLog.status);
+        if (onStatusChange) {
+          onStatusChange(newLog.status);
+        }
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [reportId, onStatusChange]);
-
   return (
     <StatusTimeline
       logs={logs}

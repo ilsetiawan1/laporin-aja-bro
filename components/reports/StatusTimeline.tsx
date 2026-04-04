@@ -245,9 +245,10 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
 }
 
 function isStatusReached(currentStatus: string, checkStatus: string): boolean {
+  if (currentStatus === "ditolak") return checkStatus === "pending" || checkStatus === "ditolak";
+
   const order = ["pending", "diproses", "selesai"];
   const currentIdx = order.indexOf(currentStatus);
   const checkIdx = order.indexOf(checkStatus);
-  if (currentIdx === -1) return false; // ditolak case
   return checkIdx <= currentIdx;
 }

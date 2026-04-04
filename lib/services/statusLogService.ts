@@ -60,10 +60,6 @@ export async function getStatusTimeline(
   return statusLogRepo.getStatusLogsByReportId(supabase, reportId);
 }
 
-/**
- * Update status laporan + tambah log
- * Hanya untuk admin — validasi dilakukan di action layer
- */
 export async function updateReportStatus(params: {
   reportId: string;
   newStatus: ReportStatus;
@@ -72,29 +68,21 @@ export async function updateReportStatus(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerClient();
 
-  // 1. Update status di tabel reports
   const { error: updateError } = await supabase
     .from("reports")
     .update({ status: params.newStatus })
     .eq("id", params.reportId);
 
   if (updateError) {
-    console.error("[statusLogService] updateStatus:", updateError.message);
-    return { success: false, error: "Gagal mengubah status laporan." };
+    return { success: false, error: "Gagal update status laporan." };
   }
 
-  // 2. Insert log
   const log = await statusLogRepo.insertStatusLog(supabase, {
     reportId: params.reportId,
     status: params.newStatus,
-    changedBy: params.adminId,
+    changedBy: params.adminId, // Pastikan di repo ini jadi 'changed_by'
     note: params.note ?? null,
   });
 
-  if (!log) {
-    // Log gagal tapi status sudah berubah — jangan rollback, cukup log error
-    console.error("[statusLogService] insertStatusLog gagal untuk reportId:", params.reportId);
-  }
-
-  return { success: true };
+  return { success: !!log };
 }
