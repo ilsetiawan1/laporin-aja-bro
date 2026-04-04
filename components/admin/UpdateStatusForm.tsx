@@ -1,3 +1,4 @@
+// components\admin\UpdateStatusForm.tsx
 "use client";
 
 import { useState, useTransition } from "react";
@@ -19,7 +20,7 @@ const STATUS_OPTIONS: { value: ReportStatus; label: string; color: string }[] = 
 
 // Transisi status yang valid
 const VALID_TRANSITIONS: Record<string, ReportStatus[]> = {
-  pending: ["diproses", "ditolak"],
+  pending: ["diproses", "selesai", "ditolak"],
   diproses: ["selesai", "ditolak"],
   selesai: [],
   ditolak: [],
