@@ -1,23 +1,33 @@
-// ============================================================
-// lib/utils/priorityCalculator.ts
-// Priority score calculation — from CLAUDE.md spec
-// ============================================================
-
 import type { ReportPriority } from "@/types";
 
+// Base weight per kategori berdasarkan urgensi
+// Key = category_id dari DB
+export const CATEGORY_WEIGHTS: Record<string, number> = {
+  "cec47091-d70f-45c3-8d00-b80f75bb8676": 10, // Keamanan & Kriminal
+  "3e2daf2a-617a-4c45-9089-88a610ce4786": 9,  // Pungli & Gratifikasi
+  "f42e4b7c-9f07-458f-a7ca-70901e621ae8": 8,  // Kesehatan
+  "857ee9c8-4c22-4956-ae95-73a7812be8cb": 7,  // Infrastruktur & Jalan
+  "7905e329-53b0-4784-aa1c-37610aba0c86": 6,  // Sampah & Lingkungan
+  "50dbfe66-2c6e-4834-850d-b5554cde1ae7": 5,  // Pelayanan Publik
+  "b8fadc82-7497-4d7d-9635-787add9b0c4e": 4,  // Penerangan Jalan
+  "25a6fa02-6588-4bca-a4b8-94138db53d5e": 3,  // Fasilitas Pendidikan
+  "adcba344-55c7-4274-a773-77dc9698f672": 1,
+};
+
 /**
- * Calculate priority score from vote and similar report counts
- * priority_score = vote_count + similar_count
+ * Hitung priority score:
+ * score = category_base_weight + vote_count + similar_count
  */
 export function calculatePriorityScore(
   voteCount: number,
-  similarCount: number
+  similarCount: number,
+  categoryId?: string | null
 ): number {
-  return voteCount + similarCount;
+  const categoryWeight = categoryId ? (CATEGORY_WEIGHTS[categoryId] ?? 1) : 1;
+  return categoryWeight + voteCount + similarCount;
 }
 
 /**
- * Get human-readable priority label from score
  * 0–5   → "rendah"
  * 6–15  → "sedang"
  * >15   → "tinggi"
@@ -28,9 +38,6 @@ export function getPriorityLabel(score: number): ReportPriority {
   return "rendah";
 }
 
-/**
- * Get Tailwind CSS classes for a priority badge
- */
 export function getPriorityBadgeClass(priority: ReportPriority): string {
   switch (priority) {
     case "tinggi":

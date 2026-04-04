@@ -39,7 +39,7 @@ function normalizeReport(raw: Record<string, unknown>): ReportWithRelations {
     priority_score: (raw.priority_score as number) ?? 0,
     similar_count: (raw.similar_count as number) ?? 0,
     vote_count: (raw.vote_count as number) ?? 0,
-    comment_count: Array.isArray(raw.comments) && raw.comments.length > 0 ? (raw.comments[0] as {count: number}).count ?? 0 : ((raw.comments as {count: number} | null)?.count ?? 0),
+    comment_count: Array.isArray(raw.comments) && raw.comments.length > 0 ? (raw.comments[0] as { count: number }).count ?? 0 : ((raw.comments as { count: number } | null)?.count ?? 0),
     created_at: raw.created_at as string,
     categories: pickFirst(raw.categories as { name: string } | null),
     cities: pickFirst(raw.cities as { name: string } | null),
@@ -174,10 +174,10 @@ export async function updatePriorityScore(
   client: SupabaseClient,
   reportId: string
 ): Promise<void> {
-  // Fetch current counts
+  // Fetch vote_count, similar_count, DAN category_id
   const { data: report } = await client
     .from("reports")
-    .select("vote_count, similar_count")
+    .select("vote_count, similar_count, category_id")
     .eq("id", reportId)
     .single();
 
@@ -185,7 +185,8 @@ export async function updatePriorityScore(
 
   const score = calculatePriorityScore(
     report.vote_count ?? 0,
-    report.similar_count ?? 0
+    report.similar_count ?? 0,
+    report.category_id ?? null  // ← tambah ini
   );
   const priority = getPriorityLabel(score);
 
