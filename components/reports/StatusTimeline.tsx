@@ -143,7 +143,7 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
                 </div>
 
                 {/* Label */}
-                <div className="text-center min-h-[2.5rem]">
+                <div className="text-center min-h-10">
                   <p
                     className={`text-xs font-bold ${isCurrent ? cfg.color : isReached ? "text-navy/60" : "text-navy/30"
                       }`}
