@@ -16,9 +16,7 @@ import type {
 
 // ── Read Operations ──────────────────────────────────────────
 
-export async function getReports(
-  filters?: ReportFilters
-): Promise<ReportWithRelations[]> {
+export async function getReports(filters?: ReportFilters): Promise<ReportWithRelations[]> {
   const supabase = await createServerClient();
   return reportRepo.getReports(supabase, filters);
 }

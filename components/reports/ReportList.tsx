@@ -45,7 +45,13 @@ function getTitleInitial(title: string): string {
   return title.trim().charAt(0).toUpperCase();
 }
 
-export default function ReportList({ initialSearch = "" }: { initialSearch?: string }) {
+export default function ReportList({
+  initialSearch = "",
+  initialCategory = "",
+}: {
+  initialSearch?: string;
+  initialCategory?: string;
+}) {
   const [reports, setReports] = useState<ReportWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -54,28 +60,38 @@ export default function ReportList({ initialSearch = "" }: { initialSearch?: str
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
   const [search, setSearch] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState(initialCategory);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [filterDistrict, setFilterDistrict] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
 
-  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+
+  // useEffect(() => {
+  //   setSearch(initialSearch);
+  //   setDebouncedSearch(initialSearch);
+  //   setFilterCategory(initialCategory);
+  // }, [initialSearch, initialCategory]);
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
   }, [search]);
 
-  // Fetch reports
   const fetchReports = useCallback(async () => {
     setLoading(true);
-    const data = await getPublicReports({
-      search: debouncedSearch || undefined,
-      status: filterStatus || undefined,
-      city: filterCity || undefined,
-      district: filterDistrict || undefined,
-      category: filterCategory || undefined,
-    });
+
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (filterCategory) params.set("category", filterCategory);
+    if (filterStatus) params.set("status", filterStatus);
+    if (filterCity) params.set("city", filterCity);
+    if (filterDistrict) params.set("district", filterDistrict);
+
+    console.log("[fetchReports CLIENT] params:", params.toString()); // debug
+
+    const res = await fetch(`/api/reports?${params.toString()}`);
+    const data = await res.json();
     setReports(data);
     setLoading(false);
   }, [debouncedSearch, filterStatus, filterCity, filterDistrict, filterCategory]);

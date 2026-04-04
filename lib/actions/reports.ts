@@ -11,6 +11,7 @@ export async function getLatestReports(): Promise<ReportWithRelations[]> {
   return reportService.getReports({ limit: 8 });
 }
 
+// lib/actions/reports.ts
 export async function getPublicReports(params: {
   search?: string;
   category?: string;
@@ -18,6 +19,8 @@ export async function getPublicReports(params: {
   district?: string;
   status?: string;
 }): Promise<ReportWithRelations[]> {
+  console.log("[getPublicReports] params received:", JSON.stringify(params)); // ← tambah ini
+
   const filters: ReportFilters = {
     search: params.search,
     category: params.category,
@@ -26,6 +29,8 @@ export async function getPublicReports(params: {
     status: params.status,
     limit: 50,
   };
+
+  console.log("[getPublicReports] filters sent:", JSON.stringify(filters)); // ← dan ini
   return reportService.getReports(filters);
 }
 

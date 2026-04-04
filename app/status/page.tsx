@@ -12,9 +12,9 @@ export const metadata = {
 export default async function StatusPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>;
+  searchParams: Promise<{ search?: string; category?: string }>;
 }) {
-  const { search } = await searchParams;
+  const { search, category } = await searchParams;
 
   return (
     <main className="flex flex-col min-h-screen">
@@ -62,7 +62,10 @@ export default async function StatusPage({
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
-          <ReportList initialSearch={search ?? ""} />
+          <ReportList
+            initialSearch={search ?? ""}
+            initialCategory={category ?? ""}
+          />
         </div>
       </div>
       <Footer />

@@ -173,9 +173,13 @@ export default async function ReportDetailPage({ params }: Props) {
                       </p>
                     </div>
                     <Link
-                      href={`/status?search=${encodeURIComponent(
-                        report.title.split(" ").filter((w) => w.length > 3).slice(0, 2).join(" ")
-                      )}`}
+                      href={`/reports?search=${encodeURIComponent(
+                        report.title
+                          .split(" ")
+                          .filter((w) => w.length > 2)
+                          .slice(0, 2)
+                          .join(" ")
+                      )}${report.category_id ? `&category=${report.category_id}` : ""}`}
                       className="mt-2 ml-7 inline-flex items-center gap-1 text-xs text-orange/80 hover:text-orange font-semibold underline underline-offset-2 transition-colors"
                     >
                       Lihat laporan serupa

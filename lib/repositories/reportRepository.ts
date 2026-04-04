@@ -70,8 +70,19 @@ export async function getReports(
     .order("created_at", { ascending: false })
     .limit(filters?.limit ?? 50);
 
-  if (filters?.search) {
+  if (filters?.search && filters?.category) {
+    const keywords = filters.search
+      .split(" ")
+      .filter((w) => w.length > 2)
+      .map((w) => `title.ilike.%${w}%`)
+      .join(",");
+
+    query = query.or(`${keywords},category_id.eq.${filters.category}`);
+
+  } else if (filters?.search) {
     query = query.ilike("title", `%${filters.search}%`);
+  } else if (filters?.category) {
+    query = query.eq("category_id", filters.category);
   }
   if (filters?.status) {
     query = query.eq("status", filters.status as Report["status"]);
@@ -81,9 +92,6 @@ export async function getReports(
   }
   if (filters?.district) {
     query = query.eq("district_id", filters.district);
-  }
-  if (filters?.category) {
-    query = query.eq("category_id", filters.category);
   }
   if (filters?.userId) {
     query = query.eq("user_id", filters.userId);
@@ -216,7 +224,6 @@ export async function findSimilarReports(
     .select("id");
 
   if (keywords.length > 0 && categoryId) {
-    // Cocok judul ATAU sama kategori
     const keywordFilter = keywords
       .map((kw) => `title.ilike.%${kw}%`)
       .join(",");

@@ -36,6 +36,12 @@ export default function ReportFilters({
   const [districts, setDistricts] = useState<District[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
 
+  useEffect(() => {
+    if (filterStatus || filterCity || filterDistrict || filterCategory) {
+      setFilterOpen(true);
+    }
+  }, []);
+
   // Load initial options
   useEffect(() => {
     Promise.all([getCategories(), getCities()]).then(([cats, cits]) => {
@@ -70,37 +76,55 @@ export default function ReportFilters({
 
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 mb-6 shadow-md shadow-navy/10 relative z-20">
+      {/* Tambah di atas div search — tampil hanya jika ada category filter */}
+      {filterCategory && (
+        <div className="flex items-center gap-2 mb-3 p-2.5 bg-orange/5 border border-orange/20 rounded-xl">
+          <p className="text-xs text-orange font-medium flex-1">
+            Menampilkan laporan serupa
+            {categories.find(c => c.id === filterCategory) && (
+              <span className="font-bold"> · {categories.find(c => c.id === filterCategory)?.name}</span>
+            )}
+          </p>
+          <button
+            onClick={() => setFilterCategory("")}
+            className="text-orange/60 hover:text-orange transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         {/* Search */}
-<div className="relative flex-1 group">
-  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-    <svg 
-      className="w-4 h-4 text-navy/35 group-focus-within:text-blue transition-colors" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor" 
-      strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  </div>
-  <input
-    type="text"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    onFocus={() => setFilterOpen(true)}
-    placeholder="Cari laporan..."
-    className="input-field pl-10! w-full transition-all duration-300"
-    id="shared-search"
-  />
-</div>
+        <div className="relative flex-1 group">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <svg
+              className="w-4 h-4 text-navy/35 group-focus-within:text-blue transition-colors"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setFilterOpen(true)}
+            placeholder="Cari laporan..."
+            className="input-field pl-10! w-full transition-all duration-300"
+            id="shared-search"
+          />
+        </div>
 
         {/* Toggle Filter Button */}
         <button
           onClick={() => setFilterOpen((prev) => !prev)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 shrink-0 ${
-            filterOpen ? "border-blue/40 text-blue bg-blue/5" : "border-slate-200 text-navy/50 bg-white hover:border-blue/30 hover:text-blue"
-          }`}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 shrink-0 ${filterOpen ? "border-blue/40 text-blue bg-blue/5" : "border-slate-200 text-navy/50 bg-white hover:border-blue/30 hover:text-blue"
+            }`}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2" />
