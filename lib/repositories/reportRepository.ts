@@ -203,30 +203,38 @@ export async function updatePriorityScore(
 export async function findSimilarReports(
   client: SupabaseClient,
   title: string,
-  description?: string,
+  categoryId?: string | null,  // ← tambah parameter
   excludeId?: string
 ): Promise<string[]> {
-  // Combine title + description untuk keyword extraction
-  const combinedText = [title, description].filter(Boolean).join(" ");
-  const keywords = extractKeywords(combinedText);
-  if (keywords.length === 0) return [];
+  const keywords = extractKeywords(title); // cukup dari title saja
 
-  // Build OR filter: title ILIKE OR description ILIKE per keyword
-  const orFilter = keywords
-    .map((kw) => `title.ilike.%${kw}%,description.ilike.%${kw}%`)
-    .join(",");
+  if (keywords.length === 0 && !categoryId) return [];
 
+  // Build query berdasarkan keyword ATAU kategori yang sama
   let query = client
     .from("reports")
-    .select("id")
-    .or(orFilter)
-    .limit(10);
+    .select("id");
+
+  if (keywords.length > 0 && categoryId) {
+    // Cocok judul ATAU sama kategori
+    const keywordFilter = keywords
+      .map((kw) => `title.ilike.%${kw}%`)
+      .join(",");
+    query = query.or(`${keywordFilter},category_id.eq.${categoryId}`);
+  } else if (keywords.length > 0) {
+    const keywordFilter = keywords
+      .map((kw) => `title.ilike.%${kw}%`)
+      .join(",");
+    query = query.or(keywordFilter);
+  } else if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  }
 
   if (excludeId) {
     query = query.neq("id", excludeId);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(10);
 
   if (error) {
     console.error("[reportRepo] findSimilarReports:", error.message);

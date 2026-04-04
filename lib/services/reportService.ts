@@ -52,7 +52,8 @@ export async function createReport(
   const similarIds = await reportRepo.findSimilarReports(
     supabase,
     payload.title,
-    payload.description
+    payload.category_id,
+    payload.id
   );
 
   const input: CreateReportInput = {

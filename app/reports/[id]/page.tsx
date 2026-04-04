@@ -34,6 +34,20 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+function stringToGradient(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 60%, 75%), hsl(${h2}, 70%, 60%))`;
+}
+
+function getTitleInitial(title: string): string {
+  return title.trim().charAt(0).toUpperCase();
+}
+
 export async function generateMetadata({ params }: Props) {
   const { id: reportId } = await params;
   const report = await getReportDetailAction(reportId);
@@ -178,6 +192,23 @@ export default async function ReportDetailPage({ params }: Props) {
                 <div className="p-6 sm:p-8 border-b border-slate-100">
                   <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
                   <ImageLightbox images={report.image_urls} />
+                </div>
+              )}
+
+              {/* Hero illustration if no image */}
+              {(!report.image_urls || report.image_urls.length === 0) && (
+                <div className="p-6 sm:p-8 border-b border-slate-100">
+                  <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
+                  <div
+                    className="w-full h-48 flex items-center justify-center"
+                    style={{
+                      background: stringToGradient(report.title + report.description),
+                    }}
+                  >
+                    <span className="text-white text-6xl font-black opacity-80 drop-shadow-lg">
+                      {getTitleInitial(report.title)}
+                    </span>
+                  </div>
                 </div>
               )}
 

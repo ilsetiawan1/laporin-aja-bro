@@ -85,28 +85,28 @@ export default function ReportList({ initialSearch = "" }: { initialSearch?: str
   }, [fetchReports]);
 
   useEffect(() => {
-  const channel = supabase
-    .channel("reports-status-changes")
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "reports" },
-      (payload) => {
-        // Update status card yang berubah tanpa re-fetch semua
-        setReports((prev) =>
-          prev.map((r) =>
-            r.id === payload.new.id
-              ? { ...r, status: payload.new.status }
-              : r
-          )
-        );
-      }
-    )
-    .subscribe();
+    const channel = supabase
+      .channel("reports-status-changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "reports" },
+        (payload) => {
+          // Update status card yang berubah tanpa re-fetch semua
+          setReports((prev) =>
+            prev.map((r) =>
+              r.id === payload.new.id
+                ? { ...r, status: payload.new.status }
+                : r
+            )
+          );
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -210,10 +210,13 @@ export default function ReportList({ initialSearch = "" }: { initialSearch?: str
                         className="object-cover transition-transform duration-300 group-hover/link:scale-105"
                       />
                     ) : (
-                      <div className="text-orange/20 w-full h-full flex items-center justify-center bg-orange/5">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
-                        </svg>
+                      <div
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ background: stringToGradient(report.title + report.description) }}
+                      >
+                        <span className="text-white text-3xl font-bold opacity-80 drop-shadow">
+                          {getTitleInitial(report.title)}
+                        </span>
                       </div>
                     )}
                   </div>
