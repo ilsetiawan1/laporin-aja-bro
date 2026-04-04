@@ -139,6 +139,16 @@ export async function updateStatus(
     console.error("[reportService] updateStatus log:", logError.message);
   }
 
+  const { error: updateError } = await supabase
+    .from("reports")
+    .update({ status })
+    .eq("id", reportId);
+
+  if (updateError) {
+    console.error("[reportService] updateStatus:", updateError.message);
+    return { success: false, error: `Gagal update: ${updateError.message}` };
+  }
+
   return { success: true };
 }
 

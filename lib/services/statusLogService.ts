@@ -68,17 +68,18 @@ export async function updateReportStatus(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerClient();
 
-const { error: updateError } = await supabase
-  .from("reports")
-  .update({ status: params.newStatus })
-  .eq("id", params.reportId);
-
+  // 1. Update status di tabel reports
+  const { error: updateError } = await supabase
+    .from("reports")
+    .update({ status: params.newStatus })
+    .eq("id", params.reportId);
 
   if (updateError) {
-    console.error("[updateReportStatus] FAILED:", updateError.message, updateError.code);
+    console.error("[updateReportStatus] FAILED:", updateError.message);
     return { success: false, error: `Gagal update: ${updateError.message}` };
   }
 
+  // 2. Insert log baru
   const log = await statusLogRepo.insertStatusLog(supabase, {
     reportId: params.reportId,
     status: params.newStatus,
@@ -86,7 +87,6 @@ const { error: updateError } = await supabase
     note: params.note ?? null,
   });
 
-  console.log("[updateReportStatus] log inserted:", log);
   if (!log) {
     return { success: false, error: "Gagal insert status log." };
   }
