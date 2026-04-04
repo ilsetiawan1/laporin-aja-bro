@@ -1,6 +1,7 @@
 // components\reports\ReportList.tsx
 "use client";
 
+import { supabase } from "@/lib/supabase/client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -82,6 +83,31 @@ export default function ReportList({ initialSearch = "" }: { initialSearch?: str
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
+
+  useEffect(() => {
+  const channel = supabase
+    .channel("reports-status-changes")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "reports" },
+      (payload) => {
+        // Update status card yang berubah tanpa re-fetch semua
+        setReports((prev) =>
+          prev.map((r) =>
+            r.id === payload.new.id
+              ? { ...r, status: payload.new.status }
+              : r
+          )
+        );
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
 
   useEffect(() => {
     if (!user) {
