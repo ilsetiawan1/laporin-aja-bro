@@ -14,6 +14,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import ImageLightbox from "@/components/ui/ImageLightbox";
+import LiveStatusBadge from "@/components/reports/LiveStatusBadge";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-400/15 text-yellow-700 border-yellow-400/30",
@@ -85,9 +86,7 @@ export default async function ReportDetailPage({ params }: Props) {
               {/* Header */}
               <div className="p-6 sm:p-8 border-b border-slate-100">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full border ${STATUS_STYLES[report.status] ?? STATUS_STYLES.pending}`}>
-                    {STATUS_LABELS[report.status] ?? report.status}
-                  </span>
+                  <LiveStatusBadge initialStatus={report.status} />
                   {report.categories?.name && (
                     <span className="text-xs font-medium text-navy/50 bg-navy/5 px-2.5 py-1 rounded-full">
                       {report.categories.name}
