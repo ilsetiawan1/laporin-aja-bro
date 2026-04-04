@@ -9,7 +9,7 @@ import type { ReportStatusLog, ReportStatus } from "@/types";
 
 // Status flow yang valid
 export const STATUS_FLOW: Record<ReportStatus, ReportStatus[]> = {
-  pending: ["diproses", "ditolak"],
+  pending: ["diproses", "selesai", "ditolak"],
   diproses: ["selesai", "ditolak"],
   selesai: [],
   ditolak: [],
@@ -68,21 +68,28 @@ export async function updateReportStatus(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerClient();
 
-  const { error: updateError } = await supabase
-    .from("reports")
-    .update({ status: params.newStatus })
-    .eq("id", params.reportId);
+const { error: updateError } = await supabase
+  .from("reports")
+  .update({ status: params.newStatus })
+  .eq("id", params.reportId);
+
 
   if (updateError) {
-    return { success: false, error: "Gagal update status laporan." };
+    console.error("[updateReportStatus] FAILED:", updateError.message, updateError.code);
+    return { success: false, error: `Gagal update: ${updateError.message}` };
   }
 
   const log = await statusLogRepo.insertStatusLog(supabase, {
     reportId: params.reportId,
     status: params.newStatus,
-    changedBy: params.adminId, // Pastikan di repo ini jadi 'changed_by'
+    changedBy: params.adminId,
     note: params.note ?? null,
   });
 
-  return { success: !!log };
+  console.log("[updateReportStatus] log inserted:", log);
+  if (!log) {
+    return { success: false, error: "Gagal insert status log." };
+  }
+
+  return { success: true };
 }

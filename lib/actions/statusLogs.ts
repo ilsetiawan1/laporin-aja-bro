@@ -1,3 +1,4 @@
+// lib/actions/statusLogs.ts
 "use server";
 
 import { createServerClient } from "@/lib/supabase/server";
@@ -47,6 +48,8 @@ export async function updateStatusAction(params: {
   if (result.success) {
     revalidatePath(`/admin/reports/${params.reportId}`);
     revalidatePath(`/reports/${params.reportId}`);
+    revalidatePath(`/reports`);
+    revalidatePath(`/`);
   }
 
   return result;
