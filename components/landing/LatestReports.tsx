@@ -80,7 +80,7 @@ export default async function LatestReports() {
             </Link>
           </div>
         ) : (
-          <LatestReportsInteractive initialReports={reports} />
+          <LatestReportsInteractive initialReports={reports}  />
         )}
 
 

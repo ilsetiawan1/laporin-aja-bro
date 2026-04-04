@@ -2,6 +2,7 @@
 
 "use client";
 
+import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -110,6 +111,30 @@ export default function LatestReportsInteractive({
     getUserVotedIdsAction().then((ids) => setVotedIds(new Set(ids)));
   }, [user]);
 
+  useEffect(() => {
+  const channel = supabase
+    .channel("latest-reports-status")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "reports" },
+      (payload) => {
+        setReports((prev) =>
+          prev.map((r) =>
+            r.id === payload.new.id
+              ? { ...r, status: payload.new.status }
+              : r
+          )
+        );
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
+
   return (
     <div className="w-full">
       <ReportFilters
@@ -150,84 +175,92 @@ export default function LatestReportsInteractive({
             const badgeClass = getPriorityBadgeClass(priority);
             
             return (
-              <div
-                key={report.id}
-                className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/30 hover:shadow-lg hover:shadow-navy/5 transition-all duration-200 group flex flex-col"
-              >
-                <div className="flex items-center justify-between mb-3 z-10">
-                  <span className={STATUS_STYLES[report.status] || "badge-pending"}>
-                    {STATUS_LABELS[report.status] || report.status}
-                  </span>
-                  {report.categories?.name && (
-                    <span className="text-[11px] text-navy/40 font-medium">
-                      {report.categories.name}
-                    </span>
-                  )}
-                </div>
+            <div
+              key={report.id}
+              className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/30 hover:shadow-lg hover:shadow-navy/5 transition-all duration-200 group flex flex-col relative cursor-pointer"
+            >
+              {/* ✅ SATU Link utama — stretched ke seluruh card, z-0 */}
+              <Link
+                href={`/reports/${report.id}`}
+                className="absolute inset-0 rounded-2xl z-0"
+                aria-label={`Lihat detail ${report.title}`}
+              />
 
-                <Link href={`/reports/${report.id}`} className="flex-1 block relative mb-3 group/link">
-                  {/* Thumbnail */}
-                  <div className="w-full h-32 mb-3 rounded-xl overflow-hidden relative flex items-center justify-center">
-                    {report.image_urls && report.image_urls.length > 0 ? (
-                      <Image
-                        src={report.image_urls[0]}
-                        alt={report.title}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover/link:scale-105"
-                      />
-                    ) : (
-                      <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{ background: stringToGradient(report.title + report.description) }}
-                      >
-                        <span className="text-white text-3xl font-bold opacity-80 drop-shadow">
-                          {getTitleInitial(report.title)}
-                        </span>
-                      </div>
-                    )}
+              {/* Semua konten di atas pakai relative z-10 agar tidak terblokir link */}
+              <div className="relative z-10 flex items-center justify-between mb-3">
+                <span className={STATUS_STYLES[report.status] || "badge-pending"}>
+                  {STATUS_LABELS[report.status] || report.status}
+                </span>
+                {report.categories?.name && (
+                  <span className="text-[11px] text-navy/40 font-medium">
+                    {report.categories.name}
+                  </span>
+                )}
+              </div>
+
+              {/* Thumbnail — tidak perlu Link lagi */}
+              <div className="relative z-10 w-full h-32 mb-3 rounded-xl overflow-hidden">
+                {report.image_urls && report.image_urls.length > 0 ? (
+                  <Image
+                    src={report.image_urls[0]}
+                    alt={report.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ background: stringToGradient(report.title + report.description) }}
+                  >
+                    <span className="text-white text-3xl font-bold opacity-80 drop-shadow">
+                      {getTitleInitial(report.title)}
+                    </span>
                   </div>
-                  
-                  <h3 className="text-navy font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue transition-colors">
-                    {report.title}
-                  </h3>
-                </Link>
+                )}
+              </div>
 
-                <div className="space-y-1 mt-auto">
-                  {/* Nama pelapor */}
-                  <span className="block text-navy/40 text-xs">
-                    Oleh{" "}
-                    <span className="font-medium text-navy/60">
-                      {report.is_anonymous
-                        ? "Anonim"
-                        : (report.profiles?.full_name ?? "Pengguna")}
-                    </span>
+              <h3 className="relative z-10 text-navy font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue transition-colors mb-2">
+                {report.title}
+              </h3>
+
+              <div className="relative z-10 space-y-1 mt-auto">
+                <span className="block text-navy/40 text-xs">
+                  Oleh{" "}
+                  <span className="font-medium text-navy/60">
+                    {report.is_anonymous ? "Anonim" : (report.profiles?.full_name ?? "Pengguna")}
                   </span>
-                  {report.cities?.name && (
-                    <p className="text-navy/45 text-xs flex items-center gap-1.5">
-                      <svg className="w-3 h-3 shrink-0 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {report.cities.name}
-                      {report.districts?.name && `, ${report.districts.name}`}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between pt-2">
-                    <p className="text-navy/35 text-xs">
-                      {new Date(report.created_at).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/reports/${report.id}#komentar`} className="flex items-center gap-1 text-navy/40 hover:text-blue transition-colors" title="Komentar">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                          </svg>
-                          <span className="text-[10px] font-medium">{report.comment_count || 0}</span>
-                        </Link>
+                </span>
+                {report.cities?.name && (
+                  <p className="text-navy/45 text-xs flex items-center gap-1.5">
+                    <svg className="w-3 h-3 shrink-0 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {report.cities.name}
+                    {report.districts?.name && `, ${report.districts.name}`}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-navy/35 text-xs">
+                    {new Date(report.created_at).toLocaleDateString("id-ID", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })}
+                  </p>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      {/* ✅ z-10 agar link komentar bisa diklik */}
+                      <Link
+                        href={`/reports/${report.id}#komentar`}
+                        className="relative z-10 flex items-center gap-1 text-navy/40 hover:text-blue transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span className="text-[10px] font-medium">{report.comment_count || 0}</span>
+                      </Link>
+                      {/* ✅ VoteButton sudah punya z-10 lewat relative */}
+                      <div className="relative z-10">
                         <VoteButton
                           reportId={report.id}
                           initialVoteCount={report.vote_count ?? 0}
@@ -239,14 +272,15 @@ export default function LatestReportsInteractive({
                           size="sm"
                         />
                       </div>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
-                        {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"}{" "}
-                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                      </span>
                     </div>
+                    <span className={`relative z-10 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                      {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"}{" "}
+                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                    </span>
                   </div>
                 </div>
               </div>
+            </div>
             );
           })}
         </div>
