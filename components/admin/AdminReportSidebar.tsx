@@ -26,12 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function AdminReportSidebar({ reportId, currentStatus, initialLogs }: Props) {
-  const [liveStatus, setLiveStatus] = useState(() => {
-    if (initialLogs.length > 0) {
-      return initialLogs[initialLogs.length - 1].status;
-    }
-    return currentStatus;
-  });
+  const [liveStatus, setLiveStatus] = useState(currentStatus);
 
   return (
     <div className="space-y-4">
@@ -60,6 +55,7 @@ export default function AdminReportSidebar({ reportId, currentStatus, initialLog
         <UpdateStatusForm
           reportId={reportId}
           currentStatus={liveStatus}
+          onSuccess={(newStatus) => setLiveStatus(newStatus)}
         />
       </div>
 
