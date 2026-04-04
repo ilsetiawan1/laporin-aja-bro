@@ -36,6 +36,7 @@ export default function RealtimeStatusTimeline({
         filter: `report_id=eq.${reportId}`,
       }, (payload) => {
         const newLog = payload.new as ReportStatusLog;
+        const newStatus = payload.new.status;
 
         // 1. Update logs local state
         setLogs((prev) => {
@@ -43,9 +44,8 @@ export default function RealtimeStatusTimeline({
           return [...prev, newLog];
         });
 
-        if (onStatusChange) {
-          onStatusChange(newLog.status);
-        }
+        if (onStatusChange) onStatusChange(newStatus);
+        window.dispatchEvent(new CustomEvent('statusUpdated', { detail: newStatus }));
       })
       .subscribe();
 

@@ -15,6 +15,7 @@ import { id } from "date-fns/locale";
 import AiPanel from "@/components/admin/AiPanel";
 import AdminReportSidebar from "@/components/admin/AdminReportSidebar";
 import ImageLightbox from "@/components/ui/ImageLightbox";
+import LiveStatusBadge from "@/components/reports/LiveStatusBadge";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -97,9 +98,7 @@ export default async function AdminReportDetailPage({ params }: Props) {
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_STYLES[report.status]}`}>
-                      {STATUS_LABELS[report.status]}
-                    </span>
+                    <LiveStatusBadge initialStatus={report.status} />
                     {report.categories?.name && (
                       <span className="text-xs text-navy/50 bg-navy/5 px-2.5 py-1 rounded-full font-medium">
                         {report.categories.name}
