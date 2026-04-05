@@ -15,16 +15,12 @@ export default async function ReportsPage({
   searchParams: Promise<{ search?: string; category?: string }>;
 }) {
   const { search, category } = await searchParams;
+
   return (
     <main className="flex flex-col min-h-screen">
       <Navbar />
-
-      <div className="flex-1 bg-bg pb-16 pt-16 md:pt-20">
+      <div className="flex-1 bg-bg pt-24 pb-16">
         {/* Hero Banner */}
-        <ReportList
-          initialSearch={search ?? ""}
-          initialCategory={category ?? ""}
-        />
         <div className="bg-navy pt-12 pb-28 px-4 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue/20 rounded-full blur-3xl" />
@@ -40,14 +36,14 @@ export default async function ReportsPage({
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <span className="section-label-light">📋 Laporan Publik</span>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-3">
-              Laporan Terbaru
+              Status Laporan
             </h1>
             <p className="text-white/65 text-base max-w-md mx-auto">
               Cari dan pantau laporan publik dari masyarakat DIY. Transparan,
               terbuka untuk semua.
             </p>
             <Link
-              href="/#add-report"
+              href="/lapor"
               id="status-page-cta"
               className="mt-6 inline-flex btn-orange text-sm"
             >
@@ -60,16 +56,18 @@ export default async function ReportsPage({
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              Laporin aja bro!
+              Buat Laporan Baru
             </Link>
           </div>
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
-          <ReportList />
+          <ReportList
+            initialSearch={search ?? ""}
+            initialCategory={category ?? ""}
+          />
         </div>
       </div>
-
       <Footer />
     </main>
   );
