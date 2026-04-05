@@ -169,24 +169,20 @@ export default async function ReportDetailPage({ params }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <p className="text-sm text-orange font-medium flex-1">
-                        <span className="font-bold">{report.similar_count} warga lain</span> juga melaporkan masalah serupa
+                        <span className="font-bold">{report.similar_count} laporan lain</span> dengan kategori yang sama
                       </p>
                     </div>
-                    <Link
-                      href={`/reports?search=${encodeURIComponent(
-                        report.title
-                          .split(" ")
-                          .filter((w) => w.length > 2)
-                          .slice(0, 2)
-                          .join(" ")
-                      )}${report.category_id ? `&category=${report.category_id}` : ""}`}
-                      className="mt-2 ml-7 inline-flex items-center gap-1 text-xs text-orange/80 hover:text-orange font-semibold underline underline-offset-2 transition-colors"
-                    >
-                      Lihat laporan serupa
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                      </svg>
-                    </Link>
+                    {report.category_id && (
+                      <Link
+                        href={`/reports?category=${report.category_id}`}
+                        className="mt-2 ml-7 inline-flex items-center gap-1 text-xs text-orange/80 hover:text-orange font-semibold underline underline-offset-2 transition-colors"
+                      >
+                        Lihat laporan serupa
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>

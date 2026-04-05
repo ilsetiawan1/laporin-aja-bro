@@ -26,6 +26,17 @@ export async function getReportDetail(
 ): Promise<ReportWithRelations | null> {
   const supabase = await createServerClient();
   const report = await reportRepo.getReportById(supabase, id);
+  if (!report) return null;
+
+  if (report.category_id) {
+    const similarCount = await reportRepo.countSimilarReports(
+      supabase,
+      id,
+      report.category_id
+    );
+    report.similar_count = similarCount;
+  }
+
   return report;
 }
 

@@ -76,9 +76,7 @@ export async function getReports(
       .filter((w) => w.length > 2)
       .map((w) => `title.ilike.%${w}%`)
       .join(",");
-
     query = query.or(`${keywords},category_id.eq.${filters.category}`);
-
   } else if (filters?.search) {
     query = query.ilike("title", `%${filters.search}%`);
   } else if (filters?.category) {
@@ -105,6 +103,25 @@ export async function getReports(
   }
 
   return ((data as Record<string, unknown>[]) ?? []).map(normalizeReport);
+}
+
+export async function countSimilarReports(
+  client: SupabaseClient,
+  reportId: string,
+  categoryId: string
+): Promise<number> {
+  const { count, error } = await client
+    .from("reports")
+    .select("*", { count: "exact", head: true })
+    .eq("category_id", categoryId)
+    .neq("id", reportId);
+
+  if (error) {
+    console.error("[reportRepo] countSimilarReports:", error.message);
+    return 0;
+  }
+
+  return count ?? 0;
 }
 
 export async function getReportById(
