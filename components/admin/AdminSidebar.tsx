@@ -38,6 +38,17 @@ export default function AdminSidebar({ fullName }: Props) {
         Kelola Laporan
       </Link>
 
+      <Link
+  href="/admin/activity"
+  className="flex items-center gap-2.5 text-white/70 hover:text-white 
+             hover:bg-white/10 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+>
+  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  Riwayat Aktivitas
+</Link>
+
       {/* Divider */}
       <div className="my-3 border-t border-white/10" />
 
