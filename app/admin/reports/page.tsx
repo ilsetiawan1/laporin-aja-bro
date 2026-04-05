@@ -1,9 +1,10 @@
-// app/admin/reports/page.tsx
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { getReports } from "@/lib/repositories/reportRepository";
+import { getCategories, getCities } from "@/lib/actions/locations";
 import { getPriorityBadgeClass, getPriorityLabel } from "@/lib/utils/priorityCalculator";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminReportsFilter from "@/components/admin/AdminReportsFilter";
 import Link from "next/link";
 
 export const metadata = { title: "Kelola Laporan – Admin" };
@@ -21,7 +22,16 @@ const STATUS_STYLES: Record<string, string> = {
   ditolak: "badge-ditolak",
 };
 
-export default async function AdminReportsPage() {
+interface Props {
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    category?: string;
+    city?: string;
+  }>;
+}
+
+export default async function AdminReportsPage({ searchParams }: Props) {
   const supabase = await createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +44,20 @@ export default async function AdminReportsPage() {
     .single();
   if (!profile || profile.role !== "admin") redirect("/");
 
-  const reports = await getReports(supabase, { limit: 50 });
+  const { search, status, category, city } = await searchParams;
+
+  // Fetch data parallel
+  const [reports, categories, cities] = await Promise.all([
+    getReports(supabase, {
+      search: search || undefined,
+      status: status || undefined,
+      category: category || undefined,
+      city: city || undefined,
+      limit: 100,
+    }),
+    getCategories(),
+    getCities(),
+  ]);
 
   return (
     <div className="min-h-screen bg-bg flex">
@@ -43,7 +66,7 @@ export default async function AdminReportsPage() {
       <main className="flex-1 p-6 lg:p-8 overflow-auto">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-extrabold text-navy">Kelola Laporan</h1>
               <p className="text-navy/45 text-sm mt-1">
@@ -51,6 +74,16 @@ export default async function AdminReportsPage() {
               </p>
             </div>
           </div>
+
+          {/* Filter Component */}
+          <AdminReportsFilter
+            categories={categories}
+            cities={cities}
+            currentSearch={search ?? ""}
+            currentStatus={status ?? ""}
+            currentCategory={category ?? ""}
+            currentCity={city ?? ""}
+          />
 
           {/* Tabel */}
           <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
@@ -71,7 +104,7 @@ export default async function AdminReportsPage() {
                   {reports.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center text-navy/40 py-16 text-sm">
-                        Tidak ada laporan
+                        Tidak ada laporan yang cocok
                       </td>
                     </tr>
                   ) : (
@@ -79,10 +112,7 @@ export default async function AdminReportsPage() {
                       const priority = getPriorityLabel(r.priority_score ?? 0);
                       const badgeClass = getPriorityBadgeClass(priority);
                       return (
-                        <tr
-                          key={r.id}
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
+                        <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
                           <td className="px-5 py-3.5 max-w-[200px]">
                             <p className="text-navy font-semibold text-xs line-clamp-2 leading-snug">
                               {r.title}
@@ -100,18 +130,14 @@ export default async function AdminReportsPage() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5">
-                            <span
-                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}
-                            >
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                               {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"}{" "}
                               {priority.charAt(0).toUpperCase() + priority.slice(1)}
                             </span>
                           </td>
                           <td className="px-5 py-3.5 text-navy/40 text-xs whitespace-nowrap">
                             {new Date(r.created_at).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
+                              day: "numeric", month: "short", year: "numeric",
                             })}
                           </td>
                           <td className="px-5 py-3.5">
