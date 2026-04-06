@@ -189,7 +189,7 @@ export default async function ReportDetailPage({ params }: Props) {
 
               {/* Image Gallery */}
               {report.image_urls && report.image_urls.length > 0 && (
-                <div className="p-6 sm:p-8 border-b border-slate-100">
+                <div className="p-6 sm:p-8  border-b border-slate-100">
                   <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
                   <ImageLightbox images={report.image_urls} />
                 </div>
@@ -200,7 +200,7 @@ export default async function ReportDetailPage({ params }: Props) {
                 <div className="p-6 sm:p-8 border-b border-slate-100">
                   <h2 className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-3">Bukti Foto</h2>
                   <div
-                    className="w-full h-48 flex items-center justify-center"
+                    className="w-full h-48 flex items-center justify-center rounded-2xl"
                     style={{
                       background: stringToGradient(report.title + report.description),
                     }}

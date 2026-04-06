@@ -19,9 +19,9 @@ export default async function ReportsPage({
   return (
     <main className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex-1 bg-bg pt-24 pb-16">
+      <div className="flex-1 bg-bg  pb-16">
         {/* Hero Banner */}
-        <div className="bg-navy pt-12 pb-28 px-4 sm:px-6 relative overflow-hidden">
+        <div className="bg-navy pt-24 sm:pt-28 lg:pt-36 pb-28 px-4 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue/20 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange/10 rounded-full blur-3xl" />
