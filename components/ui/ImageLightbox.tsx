@@ -12,7 +12,7 @@ export default function ImageLightbox({ images }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2  sm:grid-cols-3 gap-3">
         {images.map((url, i) => (
           <button
             key={i}
