@@ -1,3 +1,5 @@
+// app\dashboard\profile\page.tsx
+
 import { createServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ProfileForm from "./ProfileForm";
