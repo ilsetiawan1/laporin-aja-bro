@@ -1,4 +1,6 @@
-// lib\actions\profile.ts"use server";
+// lib\actions\profile.ts"
+
+"use server";
 
 import { createServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
