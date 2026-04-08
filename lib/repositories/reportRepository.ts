@@ -326,18 +326,23 @@ export async function getAdminStats(
   });
 
   // 3. Hitung per kategori
-  const { data: catData } = await client
-    .from("reports")
-    .select("categories ( name )");
+ // 3. Hitung per kategori — fix: categories bisa object ATAU array
+// 3. Hitung per kategori
+const { data: catData } = await client
+  .from("reports")
+  .select("category_id, categories ( name )");
 
-  const catMap: Record<string, number> = {};
-  (catData ?? []).forEach((r: { categories: { name: string }[] }) => {
-    const name = r.categories?.[0]?.name ?? "Tidak Berkategori";
-    catMap[name] = (catMap[name] ?? 0) + 1;
-  });
-  const byCategory = Object.entries(catMap)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+const catMap: Record<string, number> = {};
+(catData ?? []).forEach((r: { categories: { name: string } | { name: string }[] | null }) => {
+  const cat = Array.isArray(r.categories) ? r.categories[0] : r.categories;
+  const name = cat?.name ?? "Tidak Berkategori";
+  catMap[name] = (catMap[name] ?? 0) + 1;
+});
+
+// ← INI yang kurang
+const byCategory = Object.entries(catMap)
+  .map(([name, count]) => ({ name, count }))
+  .sort((a, b) => b.count - a.count);
 
   // 4. Laporan prioritas tinggi (score > 15)
   const { data: highRaw } = await client
