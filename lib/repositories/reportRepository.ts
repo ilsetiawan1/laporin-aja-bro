@@ -64,11 +64,18 @@ export async function getReports(
   client: SupabaseClient,
   filters?: ReportFilters
 ): Promise<ReportWithRelations[]> {
+  const sortColumn = filters?.sort ?? "created_at";
+  const sortAscending = filters?.order === "asc";
+
   let query = client
     .from("reports")
     .select(REPORT_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(filters?.limit ?? 50);
+    .order(sortColumn, { ascending: sortAscending })
+    .limit(filters?.limit ?? 20);
+
+  if (filters?.offset) {
+    query = query.range(filters.offset, filters.offset + (filters?.limit ?? 20) - 1);
+  }
 
   if (filters?.search && filters?.category) {
     const keywords = filters.search
@@ -103,6 +110,47 @@ export async function getReports(
   }
 
   return ((data as Record<string, unknown>[]) ?? []).map(normalizeReport);
+}
+
+export async function getReportsCount(
+  client: SupabaseClient,
+  filters?: Omit<ReportFilters, "limit" | "offset" | "sort" | "order">
+): Promise<number> {
+  let query = client
+    .from("reports")
+    .select("*", { count: "exact", head: true });
+
+  if (filters?.search && filters?.category) {
+    const keywords = filters.search
+      .split(" ")
+      .filter((w) => w.length > 2)
+      .map((w) => `title.ilike.%${w}%`)
+      .join(",");
+    query = query.or(`${keywords},category_id.eq.${filters.category}`);
+  } else if (filters?.search) {
+    query = query.ilike("title", `%${filters.search}%`);
+  } else if (filters?.category) {
+    query = query.eq("category_id", filters.category);
+  }
+  if (filters?.status) {
+    query = query.eq("status", filters.status as Report["status"]);
+  }
+  if (filters?.city) {
+    query = query.eq("city_id", filters.city);
+  }
+  if (filters?.district) {
+    query = query.eq("district_id", filters.district);
+  }
+  if (filters?.userId) {
+    query = query.eq("user_id", filters.userId);
+  }
+
+  const { count, error } = await query;
+  if (error) {
+    console.error("[reportRepo] getReportsCount:", error.message);
+    return 0;
+  }
+  return count ?? 0;
 }
 
 export async function countSimilarReports(

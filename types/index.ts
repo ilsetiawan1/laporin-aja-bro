@@ -157,4 +157,7 @@ export interface ReportFilters {
   status?: string;
   userId?: string;
   limit?: number;
+  offset?: number;
+  sort?: "created_at" | "priority_score";
+  order?: "asc" | "desc";
 }

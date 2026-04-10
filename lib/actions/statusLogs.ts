@@ -47,6 +47,7 @@ export async function updateStatusAction(params: {
 
   if (result.success) {
     revalidatePath(`/admin/reports/${params.reportId}`);
+    revalidatePath(`/admin/reports`);
     revalidatePath(`/reports/${params.reportId}`);
     revalidatePath(`/reports`);
     revalidatePath(`/`);
