@@ -14,15 +14,6 @@ interface Props {
   currentOrder: string;
 }
 
-type FilterState = {
-  search: string;
-  status: string;
-  category: string;
-  city: string;
-};
-
-const DEBOUNCE_MS = 400;
-
 export default function AdminReportsFilter({
   categories,
   cities,
@@ -36,77 +27,62 @@ export default function AdminReportsFilter({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  // State lokal untuk input instan
   const [search, setSearch] = useState(currentSearch);
-  const [status, setStatus] = useState(currentStatus);
-  const [category, setCategory] = useState(currentCategory);
-  const [city, setCity] = useState(currentCity);
-
-  // Sync state dari URL (penting untuk tombol back/forward browser)
-  useEffect(() => {
-    setSearch(currentSearch || "");
-    setStatus(currentStatus || "");
-    setCategory(currentCategory || "");
-    setCity(currentCity || "");
-  }, [currentSearch, currentStatus, currentCategory, currentCity]);
-
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Always-current snapshot used inside debounce callbacks to avoid stale closures
-  const latestFilters = useRef({ search, status, category, city });
+  // Sync state lokal jika props dari server berubah (back/forward button)
   useEffect(() => {
-    latestFilters.current = { search, status, category, city };
-  });
+    setSearch(currentSearch);
+  }, [currentSearch]);
 
-  const applyFilters = (overrides: Partial<FilterState>) => {
-    const f = { ...latestFilters.current, ...overrides };
+  const applyFilters = (overrides: { search?: string; status?: string; category?: string; city?: string }) => {
     const params = new URLSearchParams();
 
-    if (f.search) params.set("search", f.search);
-    if (f.status) params.set("status", f.status);
-    if (f.category) params.set("category", f.category);
-    if (f.city) params.set("city", f.city);
+    // Ambil nilai terbaru (dari override atau props saat ini)
+    const fSearch = overrides.search !== undefined ? overrides.search : currentSearch;
+    const fStatus = overrides.status !== undefined ? overrides.status : currentStatus;
+    const fCat = overrides.category !== undefined ? overrides.category : currentCategory;
+    const fCity = overrides.city !== undefined ? overrides.city : currentCity;
 
-    // Preserve current sort/order
+    if (fSearch) params.set("search", fSearch);
+    if (fStatus) params.set("status", fStatus);
+    if (fCat) params.set("category", fCat);
+    if (fCity) params.set("city", fCity);
+
     if (currentSort) params.set("sort", currentSort);
     if (currentOrder) params.set("order", currentOrder);
-    // Filter change always resets to page 1
 
     startTransition(() => {
       router.push(`/admin/reports?${params.toString()}`);
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      // Read from ref so the callback always sees the latest search value
-      applyFilters({ search: value });
-    }, DEBOUNCE_MS);
+      applyFilters({ search: val });
+    }, 500);
   };
 
   const clearFilters = () => {
-    setSearch("");
-    setStatus("");
-    setCategory("");
-    setCity("");
-    
     const params = new URLSearchParams();
     if (currentSort) params.set("sort", currentSort);
     if (currentOrder) params.set("order", currentOrder);
-    
-    const queryString = params.toString();
+
     startTransition(() => {
-      router.push(`/admin/reports${queryString ? `?${queryString}` : ""}`);
+      router.push(`/admin/reports?${params.toString()}`);
     });
   };
 
-  const activeFilterCount = [status, category, city, search].filter(Boolean).length;
-  const hasFilters = activeFilterCount > 0;
+  const activeFilterCount = [currentStatus, currentCategory, currentCity, currentSearch].filter(Boolean).length;
 
   return (
-    <div className="relative z-20 bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-5">
-      <div className="flex flex-col sm:flex-row gap-2.5">
+    // relative z-30 memastikan dropdown tidak tertindih tabel
+    <div className="relative z-30 bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-5">
+      <div className="flex flex-col lg:flex-row gap-3">
+
         {/* Search Input */}
         <div className="relative flex-1">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -119,98 +95,75 @@ export default function AdminReportsFilter({
             value={search}
             disabled={isPending}
             onChange={(e) => handleSearchChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                if (debounceRef.current) clearTimeout(debounceRef.current);
-                applyFilters({ search });
-              }
-            }}
+            onKeyDown={(e) => e.key === "Enter" && applyFilters({ search })}
             placeholder="Cari judul laporan..."
-            className="input-field pl-9 w-full text-xs h-10 border-slate-200 focus:border-blue-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs h-10 focus:border-blue-500 outline-none transition-all"
           />
         </div>
 
-        {/* Status Dropdown */}
-        <select
-          value={status}
-          disabled={isPending}
-          onChange={(e) => {
-            const val = e.target.value;
-            setStatus(val);
-            applyFilters({ status: val });
-          }}
-          className="input-field text-xs h-10 w-full sm:w-40 border-slate-200 cursor-pointer"
-        >
-          <option value="">Semua Status</option>
-          <option value="pending">Menunggu</option>
-          <option value="diproses">Diproses</option>
-          <option value="selesai">Selesai</option>
-          <option value="ditolak">Ditolak</option>
-        </select>
+        {/* Dropdowns Container - Menggunakan flex-wrap agar tidak meluber */}
+        <div className="flex flex-wrap md:flex-nowrap gap-2">
+          <select
+            value={currentStatus}
+            disabled={isPending}
+            onChange={(e) => applyFilters({ status: e.target.value })}
+            className="flex-1 md:w-36 bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 h-10 outline-none cursor-pointer focus:border-blue-500"
+          >
+            <option value="">Semua Status</option>
+            <option value="pending">Menunggu</option>
+            <option value="diproses">Diproses</option>
+            <option value="selesai">Selesai</option>
+            <option value="ditolak">Ditolak</option>
+          </select>
 
-        {/* Kategori Dropdown */}
-        <select
-          value={category}
-          disabled={isPending}
-          onChange={(e) => {
-            const val = e.target.value;
-            setCategory(val);
-            applyFilters({ category: val });
-          }}
-          className="input-field text-xs h-10 w-full sm:w-48 border-slate-200 cursor-pointer"
-        >
-          <option value="">Semua Kategori</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          <select
+            value={currentCategory}
+            disabled={isPending}
+            onChange={(e) => applyFilters({ category: e.target.value })}
+            className="flex-1 md:w-44 bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 h-10 outline-none cursor-pointer focus:border-blue-500"
+          >
+            <option value="">Semua Kategori</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
 
-        {/* Kota Dropdown */}
-        <select
-          value={city}
-          disabled={isPending}
-          onChange={(e) => {
-            const val = e.target.value;
-            setCity(val);
-            applyFilters({ city: val });
-          }}
-          className="input-field text-xs h-10 w-full sm:w-44 border-slate-200 cursor-pointer"
-        >
-          <option value="">Semua Kota</option>
-          {cities.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          <select
+            value={currentCity}
+            disabled={isPending}
+            onChange={(e) => applyFilters({ city: e.target.value })}
+            className="flex-1 md:w-40 bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 h-10 outline-none cursor-pointer focus:border-blue-500"
+          >
+            <option value="">Semua Kota</option>
+            {cities.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
 
-        {/* Loading Spinner */}
-        <div className="w-6 flex items-center justify-center shrink-0">
-          {isPending && (
-            <div className="w-4 h-4 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-          )}
+          {/* Loading Indicator */}
+          <div className="flex items-center justify-center w-8 shrink-0">
+            {isPending && (
+              <div className="w-4 h-4 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Chips Section */}
-      {hasFilters && (
+      {/* Active Filter Chips */}
+      {activeFilterCount > 0 && (
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-blue-50 text-blue-600">
               {activeFilterCount} Filter Aktif
             </span>
-
-            {search && <Chip label={`"${search}"`} icon="search" />}
-            {status && (
-              <Chip 
-                label={{ pending: "Menunggu", diproses: "Diproses", selesai: "Selesai", ditolak: "Ditolak" }[status] || status} 
-              />
-            )}
-            {category && <Chip label={categories.find(c => c.id === category)?.name} />}
-            {city && <Chip label={cities.find(c => c.id === city)?.name} />}
+            {currentSearch && <Chip label={`"${currentSearch}"`} icon="search" />}
+            {currentStatus && <Chip label={currentStatus} />}
+            {currentCategory && <Chip label={categories.find(c => c.id === currentCategory)?.name} />}
+            {currentCity && <Chip label={cities.find(c => c.id === currentCity)?.name} />}
           </div>
-
           <button
             onClick={clearFilters}
-            className="text-xs text-blue-600 font-medium hover:text-blue-700 transition-colors shrink-0 ml-4"
+            className="text-xs text-blue-600 font-medium hover:underline"
           >
             Reset filter
           </button>
@@ -220,14 +173,13 @@ export default function AdminReportsFilter({
   );
 }
 
-// Sub-component kecil untuk kerapihan kode
 function Chip({ label, icon }: { label?: string; icon?: string }) {
   if (!label) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[10px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">
+    <span className="inline-flex items-center gap-1.5 text-[10px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200 uppercase">
       {icon === "search" && (
         <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth={2.5} />
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth={3} />
         </svg>
       )}
       {label}
