@@ -177,15 +177,10 @@ export default function LatestReportsInteractive({
             return (
               <div
                 key={report.id}
-                className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/30 hover:shadow-lg hover:shadow-navy/5 transition-all duration-200 group flex flex-col relative cursor-pointer"
+                className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-blue/30 hover:shadow-lg hover:shadow-navy/5 transition-all duration-200 group flex flex-col"
               >
-                <Link href={`/reports/${report.id}`}
-                  className="absolute inset-0 rounded-2xl z-0"
-                  aria-label={`Lihat detail ${report.title}`}
-                />
-
-                {/* Semua konten di atas pakai relative z-10 agar tidak terblokir link */}
-                <div className="relative z-10 flex items-center justify-between mb-3">
+                {/* Header badges */}
+                <div className="flex items-center justify-between mb-3">
                   <span className={STATUS_STYLES[report.status] || "badge-pending"}>
                     {STATUS_LABELS[report.status] || report.status}
                   </span>
@@ -196,13 +191,17 @@ export default function LatestReportsInteractive({
                   )}
                 </div>
 
-                {/* Thumbnail — tidak perlu Link lagi */}
-                <div className="relative z-10 w-full h-32 mb-3 rounded-xl overflow-hidden">
+                {/* Thumbnail — tambahkan relative di sini */}
+                <Link
+                  href={`/reports/${report.id}`}
+                  className="relative block w-full h-32 mb-3 rounded-xl overflow-hidden" 
+                >
                   {report.image_urls && report.image_urls.length > 0 ? (
                     <Image
                       src={report.image_urls[0]}
                       alt={report.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, 25vw"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
@@ -215,13 +214,17 @@ export default function LatestReportsInteractive({
                       </span>
                     </div>
                   )}
-                </div>
+                </Link>
 
-                <h3 className="relative z-10 text-navy font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue transition-colors mb-2">
-                  {report.title}
-                </h3>
+                {/* Judul — link ke detail */}
+                <Link href={`/reports/${report.id}`}>
+                  <h3 className="text-navy font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue transition-colors mb-2">
+                    {report.title}
+                  </h3>
+                </Link>
 
-                <div className="relative z-10 space-y-1 mt-auto">
+                {/* Meta info */}
+                <div className="space-y-1 mt-auto">
                   <span className="block text-navy/40 text-xs">
                     Oleh{" "}
                     <span className="font-medium text-navy/60">
@@ -247,31 +250,30 @@ export default function LatestReportsInteractive({
                     </p>
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2">
-                        {/* ✅ z-10 agar link komentar bisa diklik */}
+                        {/* Link komentar — standalone, tidak konflik */}
                         <Link
                           href={`/reports/${report.id}#komentar`}
-                          className="relative z-10 flex items-center gap-1 text-navy/40 hover:text-blue transition-colors"
+                          className="flex items-center gap-1 text-navy/40 hover:text-blue transition-colors"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                           <span className="text-[10px] font-medium">{report.comment_count || 0}</span>
                         </Link>
-                        {/* ✅ VoteButton sudah punya z-10 lewat relative */}
-                        <div className="relative z-10">
-                          <VoteButton
-                            reportId={report.id}
-                            initialVoteCount={report.vote_count ?? 0}
-                            initialHasVoted={votedIds.has(report.id)}
-                            initialPriorityScore={report.priority_score ?? 0}
-                            initialPriority={priority}
-                            userId={user?.id ?? null}
-                            authLoading={authLoading}
-                            size="sm"
-                          />
-                        </div>
+
+                        {/* VoteButton — standalone, tidak konflik */}
+                        <VoteButton
+                          reportId={report.id}
+                          initialVoteCount={report.vote_count ?? 0}
+                          initialHasVoted={votedIds.has(report.id)}
+                          initialPriorityScore={report.priority_score ?? 0}
+                          initialPriority={priority}
+                          userId={user?.id ?? null}
+                          authLoading={authLoading}
+                          size="sm"
+                        />
                       </div>
-                      <span className={`relative z-10 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                         {priority === "tinggi" ? "↑" : priority === "sedang" ? "→" : "↓"}{" "}
                         {priority.charAt(0).toUpperCase() + priority.slice(1)}
                       </span>
