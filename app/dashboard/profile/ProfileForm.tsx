@@ -191,25 +191,41 @@ export default function ProfileForm({ profile }: { profile: any }) {
         </div>
       </div>
 
-      <div className="border-t border-navy/10 pt-6">
-        <label className="block text-sm font-semibold text-navy mb-1.5">Password Lama</label>
-        <input
-          name="old_password"
-          type="password"
-          value={formData.old_password}
-          onChange={handleChange}
-          className="input-field"
-        />
+      <div className="border-t border-navy/10 pt-6 space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-navy mb-1.5">
+            Password Lama
+          </label>
+          <input
+            name="old_password"
+            type="password"
+            value={formData.old_password}
+            onChange={handleChange}
+            placeholder="Kosongkan jika tidak ingin mengubah password"
+            className="input-field"
+          />
+        </div>
 
-        <label className="block text-sm font-semibold text-navy mb-1.5">Password Baru</label>
-        <input
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="input-field"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-navy mb-1.5">
+            Password Baru
+          </label>
+          <input
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            minLength={6}
+            placeholder="Minimal 6 karakter"
+            className="input-field"
+          />
+        </div>
 
+        {(formData.old_password || formData.password) && (
+          <p className="text-xs text-navy/50">
+            Isi kedua field password untuk mengubah password Anda.
+          </p>
+        )}
       </div>
 
       <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3">
