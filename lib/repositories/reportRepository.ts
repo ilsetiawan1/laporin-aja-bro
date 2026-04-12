@@ -373,24 +373,33 @@ export async function getAdminStats(
     if (r.status in byStatus) byStatus[r.status]++;
   });
 
-  // 3. Hitung per kategori
- // 3. Hitung per kategori — fix: categories bisa object ATAU array
-// 3. Hitung per kategori
-const { data: catData } = await client
-  .from("reports")
-  .select("category_id, categories ( name )");
+  // 3. Hitung per kategori — seed semua 9 kategori dari tabel categories dulu
+  //    agar kategori dengan count 0 tetap tampil di chart
+  const { data: allCategories } = await client
+    .from("categories")
+    .select("name")
+    .order("name");
 
-const catMap: Record<string, number> = {};
-(catData ?? []).forEach((r: { categories: { name: string } | { name: string }[] | null }) => {
-  const cat = Array.isArray(r.categories) ? r.categories[0] : r.categories;
-  const name = cat?.name ?? "Tidak Berkategori";
-  catMap[name] = (catMap[name] ?? 0) + 1;
-});
+  const { data: catData } = await client
+    .from("reports")
+    .select("categories ( name )");
 
-// ← INI yang kurang
-const byCategory = Object.entries(catMap)
-  .map(([name, count]) => ({ name, count }))
-  .sort((a, b) => b.count - a.count);
+  // Seed count 0 untuk semua kategori yang ada di tabel categories
+  const catMap: Record<string, number> = {};
+  (allCategories ?? []).forEach((c: { name: string }) => {
+    catMap[c.name] = 0;
+  });
+
+  // Hitung jumlah laporan per kategori
+  (catData ?? []).forEach((r: { categories: { name: string } | { name: string }[] | null }) => {
+    const cat = Array.isArray(r.categories) ? r.categories[0] : r.categories;
+    const name = cat?.name ?? "Tidak Berkategori";
+    catMap[name] = (catMap[name] ?? 0) + 1;
+  });
+
+  const byCategory = Object.entries(catMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
 
   // 4. Laporan prioritas tinggi (score > 15)
   const { data: highRaw } = await client
