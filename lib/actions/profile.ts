@@ -18,8 +18,16 @@ export async function updateProfileAction(_prevState: any, formData: FormData) {
   const cityId = formData.get("city_id") as string;
   const districtId = formData.get("district_id") as string;
   const avatarFile = formData.get("avatar") as File | null;
+  const password = formData.get("password") as string;
 
   let avatarUrl = undefined;
+
+  if (password) {
+    const { error: passwordError } = await supabase.auth.updateUser({ password });
+    if (passwordError) {
+      return { error: "Gagal mengubah password." };
+    }
+  }
   
   if (avatarFile && avatarFile.size > 0) {
     const fileExt = avatarFile.name.split('.').pop();

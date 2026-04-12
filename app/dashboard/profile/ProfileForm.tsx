@@ -16,6 +16,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
     birth_date: profile.birth_date || "",
     city_id: profile.city_id || "",
     district_id: profile.district_id || "",
+    password: "",
   });
 
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
@@ -55,11 +56,11 @@ export default function ProfileForm({ profile }: { profile: any }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
-    
+
     try {
       const data = new FormData(e.currentTarget);
       const res = await updateProfileAction({}, data);
-      
+
       if (res?.error) {
         toast.error("Gagal", { description: res.error });
       } else {
@@ -115,7 +116,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
             type="file"
             accept="image/jpeg, image/png, image/webp"
             onChange={handleAvatarChange}
-             className="block w-full text-sm text-navy/80 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue/10 file:text-blue hover:file:bg-blue/20 cursor-pointer"
+            className="block w-full text-sm text-navy/80 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue/10 file:text-blue hover:file:bg-blue/20 cursor-pointer"
           />
           <p className="text-xs text-navy/50 mt-1">Format: JPG, PNG, WEBP. Maks 5MB.</p>
         </div>
@@ -135,7 +136,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
         </div>
         <div>
           <label className="block text-sm font-semibold text-navy mb-1.5">Nomor Telepon</label>
-           <input
+          <input
             name="phone_number"
             type="tel"
             required
@@ -148,12 +149,12 @@ export default function ProfileForm({ profile }: { profile: any }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-           <label className="block text-sm font-semibold text-navy mb-1.5">Gender</label>
-           <select name="gender" required value={formData.gender} onChange={handleChange} className="input-field">
-             <option value="">Pilih</option>
-             <option value="L">Laki-Laki</option>
-             <option value="P">Perempuan</option>
-           </select>
+          <label className="block text-sm font-semibold text-navy mb-1.5">Gender</label>
+          <select name="gender" required value={formData.gender} onChange={handleChange} className="input-field">
+            <option value="">Pilih</option>
+            <option value="L">Laki-Laki</option>
+            <option value="P">Perempuan</option>
+          </select>
         </div>
         <div>
           <label className="block text-sm font-semibold text-navy mb-1.5">Tanggal Lahir</label>
@@ -168,7 +169,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
         </div>
       </div>
 
-       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-semibold text-navy mb-1.5">Kabupaten / Kota</label>
           <select name="city_id" required value={formData.city_id} onChange={handleCityChange} className="input-field">
@@ -189,7 +190,20 @@ export default function ProfileForm({ profile }: { profile: any }) {
         </div>
       </div>
 
-<div className="pt-4 flex flex-col sm:flex-row justify-end gap-3">
+      <div className="border-t border-navy/10 pt-6">
+        <label className="block text-sm font-semibold text-navy mb-1.5">Password Baru</label>
+        <input
+          name="password"
+          type="password"
+          required
+          value={formData.password}
+          onChange={handleChange}
+          className="input-field"
+        />
+
+      </div>
+
+      <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3">
         <button
           type="button"
           onClick={() => router.back()}
@@ -198,13 +212,12 @@ export default function ProfileForm({ profile }: { profile: any }) {
         >
           Kembali
         </button>
-        
+
         <button
           type="submit"
           disabled={isPending}
-          className={`btn-primary px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2 ${
-            isPending ? "opacity-70 cursor-not-allowed" : ""
-          }`}
+          className={`btn-primary px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2 ${isPending ? "opacity-70 cursor-not-allowed" : ""
+            }`}
         >
           {isPending ? (
             <>
