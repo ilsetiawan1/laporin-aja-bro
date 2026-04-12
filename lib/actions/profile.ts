@@ -23,17 +23,16 @@ export async function updateProfileAction(_prevState: any, formData: FormData) {
 
   let avatarUrl = undefined;
 
-  if (oldPassword) {
-    const { error: passwordError } = await supabase.auth.updateUser({ password: oldPassword });
-    if (passwordError) {
-      return { error: "Password lama salah." };
-    }
-  }
-
-  if (password) {
+  if (password && oldPassword) {
     const { error: passwordError } = await supabase.auth.updateUser({ password });
     if (passwordError) {
-      return { error: "Gagal mengubah password." };
+      return { error: "Password baru tidak boleh sama dengan password lama." };
+    }
+    if (oldPassword) {
+      const { error: oldPasswordError } = await supabase.auth.updateUser({ password: oldPassword });
+      if (oldPasswordError) {
+        return { error: "Password lama salah." };
+      }
     }
   }
 
