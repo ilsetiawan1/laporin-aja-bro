@@ -1,5 +1,5 @@
-"use client";
 // components/admin/CategoryBarChart.tsx
+"use client";
 
 const COLORS = [
   "#06b6d4", // cyan
@@ -10,6 +10,7 @@ const COLORS = [
   "#ef4444", // red
   "#ec4899", // pink
   "#6366f1", // indigo
+  "#14b8a6", // teal — untuk kategori ke-9
 ];
 
 interface Props {
@@ -19,11 +20,9 @@ interface Props {
 export default function CategoryBarChart({ data }: Props) {
   const max = Math.max(...data.map((d) => d.count), 1);
 
-  // Kelompokkan "lainnya" jika lebih dari 5 kategori
-  const top = data.slice(0, 5);
-  const rest = data.slice(5);
-  const lainnya = rest.reduce((sum, d) => sum + d.count, 0);
-  const display = lainnya > 0 ? [...top, { name: "Lainnya", count: lainnya }] : top;
+  // ✅ Tampilkan semua kategori apa adanya, tanpa slice/grouping
+  // Urutkan: yang ada data dulu, baru yang 0
+  const display = [...data].sort((a, b) => b.count - a.count);
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
@@ -34,7 +33,9 @@ export default function CategoryBarChart({ data }: Props) {
         <div className="space-y-3">
           {display.map((item, i) => (
             <div key={item.name} className="flex items-center gap-3">
-              <p className="text-xs text-navy/70 font-medium w-32 shrink-0 truncate">{item.name}</p>
+              <p className="text-xs text-navy/70 font-medium w-36 shrink-0 truncate" title={item.name}>
+                {item.name}
+              </p>
               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
@@ -44,7 +45,9 @@ export default function CategoryBarChart({ data }: Props) {
                   }}
                 />
               </div>
-              <p className="text-xs font-bold text-navy/60 w-5 text-right shrink-0">{item.count}</p>
+              <p className="text-xs font-bold text-navy/60 w-5 text-right shrink-0">
+                {item.count}
+              </p>
             </div>
           ))}
         </div>
