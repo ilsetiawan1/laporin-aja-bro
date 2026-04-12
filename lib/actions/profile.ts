@@ -19,8 +19,16 @@ export async function updateProfileAction(_prevState: any, formData: FormData) {
   const districtId = formData.get("district_id") as string;
   const avatarFile = formData.get("avatar") as File | null;
   const password = formData.get("password") as string;
+  const oldPassword = formData.get("old_password") as string;
 
   let avatarUrl = undefined;
+
+  if (oldPassword) {
+    const { error: passwordError } = await supabase.auth.updateUser({ password: oldPassword });
+    if (passwordError) {
+      return { error: "Password lama salah." };
+    }
+  }
 
   if (password) {
     const { error: passwordError } = await supabase.auth.updateUser({ password });
@@ -28,7 +36,7 @@ export async function updateProfileAction(_prevState: any, formData: FormData) {
       return { error: "Gagal mengubah password." };
     }
   }
-  
+
   if (avatarFile && avatarFile.size > 0) {
     const fileExt = avatarFile.name.split('.').pop();
     const fileName = `${user.id}_${Date.now()}.${fileExt}`;
@@ -39,11 +47,11 @@ export async function updateProfileAction(_prevState: any, formData: FormData) {
     if (uploadError) {
       return { error: "Gagal mengunggah foto profil." };
     }
-    
+
     const { data: publicUrlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(fileName);
-      
+
     avatarUrl = publicUrlData.publicUrl;
   }
 

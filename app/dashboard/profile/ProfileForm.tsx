@@ -17,6 +17,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
     city_id: profile.city_id || "",
     district_id: profile.district_id || "",
     password: "",
+    old_password: "",
   });
 
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
@@ -191,11 +192,19 @@ export default function ProfileForm({ profile }: { profile: any }) {
       </div>
 
       <div className="border-t border-navy/10 pt-6">
+        <label className="block text-sm font-semibold text-navy mb-1.5">Password Lama</label>
+        <input
+          name="old_password"
+          type="password"
+          value={formData.old_password}
+          onChange={handleChange}
+          className="input-field"
+        />
+
         <label className="block text-sm font-semibold text-navy mb-1.5">Password Baru</label>
         <input
           name="password"
           type="password"
-          required
           value={formData.password}
           onChange={handleChange}
           className="input-field"
