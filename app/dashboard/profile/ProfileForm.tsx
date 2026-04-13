@@ -24,6 +24,7 @@ export default function ProfileForm({ profile }: { profile: any }) {
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(profile.avatar_url);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -191,42 +192,112 @@ export default function ProfileForm({ profile }: { profile: any }) {
         </div>
       </div>
 
-      <div className="border-t border-navy/10 pt-6 space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-navy mb-1.5">
-            Password Lama
-          </label>
-          <input
-            name="old_password"
-            type="password"
-            value={formData.old_password}
-            onChange={handleChange}
-            placeholder="Kosongkan jika tidak ingin mengubah password"
-            className="input-field"
-          />
-        </div>
+<div className="border-t border-navy/10 pt-6">
+  {/* Toggle ubah kata sandi */}
+  <button
+    type="button"
+    onClick={() => setShowPassword((prev) => !prev)}
+    className="flex items-center gap-2 text-sm font-semibold text-navy/70 hover:text-navy transition-colors group"
+  >
+    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${showPassword ? "bg-blue text-white" : "bg-navy/8 text-navy/50 group-hover:bg-navy/12"}`}>
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    </div>
+    Ubah Kata Sandi
+    <svg
+      className={`w-4 h-4 ml-auto transition-transform duration-200 ${showPassword ? "rotate-180" : ""}`}
+      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
 
-        <div>
-          <label className="block text-sm font-semibold text-navy mb-1.5">
-            Password Baru
-          </label>
-          <input
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            minLength={6}
-            placeholder="Minimal 6 karakter"
-            className="input-field"
-          />
-        </div>
-
-        {(formData.old_password || formData.password) && (
-          <p className="text-xs text-navy/50">
-            Isi kedua field password untuk mengubah password Anda.
-          </p>
-        )}
+  {/* Password fields — collapsible */}
+  {showPassword && (
+    <div className="mt-4 space-y-4 bg-navy/3 rounded-xl p-4 border border-navy/8">
+      <div>
+        <label className="block text-sm font-semibold text-navy mb-1.5">Password Terkini</label>
+        <input
+          name="old_password"
+          type="password"
+          value={formData.old_password}
+          onChange={handleChange}
+          placeholder="Masukkan password terkini..."
+          className="input-field"
+        />
       </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-sm font-semibold text-navy">Password Baru</label>
+          {/* Karakter counter */}
+          <span className={`text-xs font-bold tabular-nums transition-colors ${
+            formData.password.length === 0
+              ? "text-navy/30"
+              : formData.password.length <= 5
+              ? "text-red"
+              : formData.password.length <= 9
+              ? "text-yellow-500"
+              : "text-green-600"
+          }`}>
+            {formData.password.length}/12
+          </span>
+        </div>
+        <input
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          maxLength={12}
+          placeholder="Minimal 6, maksimal 12 karakter..."
+          className={`input-field transition-colors ${
+            formData.password.length > 0 && formData.password.length <= 5
+              ? "border-red focus:border-red"
+              : formData.password.length >= 6 && formData.password.length <= 9
+              ? "border-yellow-400 focus:border-yellow-400"
+              : formData.password.length >= 10
+              ? "border-green-500 focus:border-green-500"
+              : ""
+          }`}
+        />
+        {/* Progress bar */}
+        {formData.password.length > 0 && (
+          <div className="mt-1.5 h-1 bg-navy/8 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                formData.password.length <= 5
+                  ? "bg-red"
+                  : formData.password.length <= 9
+                  ? "bg-yellow-400"
+                  : "bg-green-500"
+              }`}
+              style={{ width: `${(formData.password.length / 12) * 100}%` }}
+            />
+          </div>
+        )}
+        {/* Hint text */}
+        <p className={`text-xs mt-1 transition-colors ${
+          formData.password.length === 0
+            ? "text-navy/40"
+            : formData.password.length <= 5
+            ? "text-red"
+            : formData.password.length <= 9
+            ? "text-yellow-600"
+            : "text-green-600"
+        }`}>
+          {formData.password.length === 0
+            ? "Minimal 6 karakter, maksimal 12 karakter"
+            : formData.password.length <= 5
+            ? `Kurang ${6 - formData.password.length} karakter lagi`
+            : formData.password.length <= 9
+            ? "Cukup kuat, bisa lebih panjang"
+            : "Password kuat!"}
+        </p>
+      </div>
+    </div>
+  )}
+</div>
 
       <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3">
         <button
