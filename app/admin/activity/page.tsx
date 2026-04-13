@@ -15,7 +15,7 @@ export default async function AdminActivityPage() {
   return (
     <div className="min-h-screen bg-bg flex">
       <AdminSidebar fullName={profile.full_name ?? user.email ?? "Admin"} />
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
+      <main className="flex-1 px-6 pb-6 pt-20 lg:p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <ActivityHistoryReports />
         </div>
