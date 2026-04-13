@@ -84,7 +84,7 @@ export default async function AdminReportsPage({
     <div className="min-h-screen bg-bg flex">
       <AdminSidebar fullName={profile.full_name ?? user.email ?? "Admin"} />
 
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
+      <main className="flex-1 px-6 pb-6 pt-20 lg:p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
