@@ -1,3 +1,5 @@
+// app\lapor\LaporPageClient.tsx
+
 "use client";
 
 import { useState, Suspense } from "react";
