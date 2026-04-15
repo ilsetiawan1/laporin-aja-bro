@@ -1,8 +1,9 @@
 // ============================================================
 // components/reports/StatusTimeline.tsx
-// Visual timeline status laporan — Server Component
+// Visual timeline status laporan — Server/Client Component
 // ============================================================
 
+import type { FC } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { ReportStatusLog } from "@/types";
@@ -17,11 +18,11 @@ const STATUS_CONFIG: Record<
     bgColor: string;
     borderColor: string;
     dotColor: string;
-    Icon: React.FC<{ className?: string }>;
+    Icon: FC<{ className?: string }>;
   }
 > = {
   pending: {
-    label: "Pending",
+    label: "Laporan Diterima",
     shortLabel: "Pending",
     color: "text-amber-700",
     bgColor: "bg-amber-50",
@@ -83,14 +84,19 @@ interface StatusTimelineProps {
 }
 
 export default function StatusTimeline({ logs, currentStatus }: StatusTimelineProps) {
-  const isDitolak = currentStatus === "ditolak";
+  // --- FIX #1: Derive effectiveStatus dari logs terbaru, bukan dari props reports.status ---
+  // Ini memastikan progress bar selalu konsisten dengan log yang ada.
+  const effectiveStatus =
+    logs.length > 0 ? logs[logs.length - 1].status : currentStatus;
 
-  // Map status ke log (ambil yang pertama kali muncul)
+  const isDitolak = effectiveStatus === "ditolak";
+
+  // --- FIX #2: logByStatus mengambil log TERAKHIR per status (bukan pertama) ---
+  // Ini memastikan timestamp dan catatan yang ditampilkan adalah yang paling relevan.
   const logByStatus: Record<string, ReportStatusLog | undefined> = {};
   for (const log of logs) {
-    if (!logByStatus[log.status]) {
-      logByStatus[log.status] = log;
-    }
+    // Selalu overwrite sehingga hasil akhir adalah entri terbaru per status
+    logByStatus[log.status] = log;
   }
 
   // Tentukan statuses yang akan ditampilkan
@@ -105,22 +111,22 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
         <div className="flex items-center justify-between mb-8 relative">
           {/* Track */}
           <div className="absolute top-4 left-4 right-4 h-1 bg-navy/10 rounded-full -z-10" />
-          {/* Active Track */}
+          {/* Active Track — menggunakan effectiveStatus, bukan currentStatus dari props */}
           <div
             className="absolute top-4 left-4 h-1 bg-blue rounded-full -z-10 transition-all duration-700"
             style={{
               width:
-                currentStatus === "pending"
+                effectiveStatus === "pending"
                   ? "0%"
-                  : currentStatus === "diproses"
+                  : effectiveStatus === "diproses"
                     ? "50%"
                     : "calc(100% - 2rem)",
             }}
           />
 
           {ORDERED_STATUSES.map((status) => {
-            const isReached = isStatusReached(currentStatus, status);
-            const isCurrent = currentStatus === status;
+            const isReached = isStatusReached(effectiveStatus, status);
+            const isCurrent = effectiveStatus === status;
             const cfg = STATUS_CONFIG[status];
             const log = logByStatus[status];
 
@@ -167,9 +173,10 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
         {displayStatuses.map((status, idx) => {
           const log = logByStatus[status];
           const cfg = STATUS_CONFIG[status];
-          if (!log && !isStatusReached(currentStatus, status)) return null;
+          // Tampilkan semua status yang sudah dicapai (ada lognya atau sudah reached)
+          if (!log && !isStatusReached(effectiveStatus, status)) return null;
 
-          const isActive = currentStatus === status;
+          const isActive = effectiveStatus === status;
           const isLast = idx === displayStatuses.length - 1;
 
           return (
@@ -187,7 +194,7 @@ export default function StatusTimeline({ logs, currentStatus }: StatusTimelinePr
                 </div>
                 {/* Connector line */}
                 {!isLast && (
-                  <div className={`w-0.5 flex-1 my-1 min-h-8 ${log ? "bg-navy/15" : "bg-navy/8 dashed"}`} />
+                  <div className={`w-0.5 flex-1 my-1 min-h-8 ${log ? "bg-navy/15" : "bg-navy/8"}`} />
                 )}
               </div>
 

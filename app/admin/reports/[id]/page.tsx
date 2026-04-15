@@ -98,7 +98,7 @@ export default async function AdminReportDetailPage({ params }: Props) {
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <LiveStatusBadge initialStatus={report.status} />
+                    <LiveStatusBadge initialStatus={report.status} reportId={reportId} />
                     {report.categories?.name && (
                       <span className="text-xs text-navy/50 bg-navy/5 px-2.5 py-1 rounded-full font-medium">
                         {report.categories.name}

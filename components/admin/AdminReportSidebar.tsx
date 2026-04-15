@@ -26,20 +26,27 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function AdminReportSidebar({ reportId, currentStatus, initialLogs }: Props) {
-  const [liveStatus, setLiveStatus] = useState(() => {
-    if (initialLogs.length > 0) {
+  // --- FIX: Derive initial liveStatus dari log terbaru, bukan currentStatus dari props ---
+  // Ini konsisten dengan logika yang sama di RealtimeStatusTimeline & StatusTimeline.
+  const [liveStatus, setLiveStatus] = useState<string>(() => {
+    if (Array.isArray(initialLogs) && initialLogs.length > 0) {
       return initialLogs[initialLogs.length - 1].status;
     }
     return currentStatus;
   });
 
+  const normalizedLive = (liveStatus || "pending").toLowerCase();
+
   return (
     <div className="space-y-4">
-      {/* Status Badge */}
+      {/* Status Saat Ini — live, tidak butuh Supabase subscription terpisah */}
+      {/* Nilai ini diupdate via onStatusChange dari RealtimeStatusTimeline di bawah */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
         <p className="text-xs font-bold text-navy/40 uppercase tracking-widest mb-2">Status Saat Ini</p>
-        <span className={`text-sm font-bold px-3 py-1.5 rounded-full ${STATUS_STYLES[liveStatus]}`}>
-          {STATUS_LABELS[liveStatus] ?? liveStatus}
+        <span
+          className={`text-sm font-bold px-3 py-1.5 rounded-full transition-colors duration-300 ${STATUS_STYLES[normalizedLive] ?? STATUS_STYLES.pending}`}
+        >
+          {STATUS_LABELS[normalizedLive] ?? liveStatus}
         </span>
       </div>
 
@@ -59,7 +66,7 @@ export default function AdminReportSidebar({ reportId, currentStatus, initialLog
         */}
         <UpdateStatusForm
           reportId={reportId}
-          currentStatus={liveStatus}
+          currentStatus={normalizedLive}
           onSuccess={(newStatus) => setLiveStatus(newStatus)}
         />
       </div>
@@ -75,6 +82,11 @@ export default function AdminReportSidebar({ reportId, currentStatus, initialLog
           <h3 className="text-sm font-bold text-navy">Riwayat Status</h3>
         </div>
 
+        {/*
+          onStatusChange: ketika realtime INSERT log baru masuk,
+          Timeline akan panggil callback ini → liveStatus di atas ikut berubah
+          → badges dan UpdateStatusForm otomatis sinkron
+        */}
         <RealtimeStatusTimeline
           reportId={reportId}
           initialLogs={initialLogs}

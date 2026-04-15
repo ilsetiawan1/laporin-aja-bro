@@ -30,18 +30,18 @@ function getTitleInitial(title: string): string {
   return title.trim().charAt(0).toUpperCase();
 }
 
+const STATUS_STYLES: Record<string, string> = {
+  pending: "badge-pending",
+  diproses: "badge-diproses",
+  selesai: "badge-selesai",
+  ditolak: "badge-ditolak",
+};
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "Menunggu",
   diproses: "Diproses",
   selesai: "Selesai",
   ditolak: "Ditolak",
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  pending: "badge-pending",
-  diproses: "badge-processing",
-  selesai: "badge-success",
-  ditolak: "badge-error",
 };
 
 const sortReports = (data: ReportWithRelations[]) => {

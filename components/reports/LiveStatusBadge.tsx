@@ -1,8 +1,23 @@
 "use client";
 
+import { JSX } from "react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { JSX } from "react";
+
+// Map status ke label dan styling
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-700 border border-yellow-200",
+  diproses: "bg-blue-100 text-blue-700 border border-blue-200",
+  selesai: "bg-green-100 text-green-700 border border-green-200",
+  ditolak: "bg-red-100 text-red-700 border border-red-200",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Menunggu",
+  diproses: "Diproses",
+  selesai: "Selesai",
+  ditolak: "Ditolak",
+};
 
 interface LiveStatusBadgeProps {
   initialStatus: string;
@@ -11,34 +26,34 @@ interface LiveStatusBadgeProps {
 
 export default function LiveStatusBadge({
   initialStatus,
-  reportId
+  reportId,
 }: LiveStatusBadgeProps): JSX.Element {
   const [status, setStatus] = useState(initialStatus);
 
-  // Sync dengan initialStatus untuk antisipasi isu race-condition atau re-render pada SSR
+  // --- FIX #1: Sync dengan initialStatus dari SSR jika prop berubah ---
+  // Ini menangani kasus di mana Server Component me-render ulang dengan status baru
   useEffect(() => {
     setStatus(initialStatus);
   }, [initialStatus]);
 
   useEffect(() => {
-    // 1. Listen via Custom Event (dari Timeline)
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail) {
-        // Mendeteksi data dari custom event yang memiliki reportId (terbaru)
-        if (customEvent.detail.reportId && customEvent.detail.reportId === reportId) {
-          setStatus(customEvent.detail.status);
-        }
-        // Mendeteksi fallback data string murni
-        else if (typeof customEvent.detail === 'string') {
-          setStatus(customEvent.detail);
-        }
+    // --- JALUR 1: Custom Event dari RealtimeStatusTimeline ---
+    // Timeline akan dispatch event ini terlebih dahulu (dari INSERT ke report_status_logs)
+    const handleStatusEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ reportId: string; status: string }>;
+      const detail = customEvent.detail;
+
+      // Guard: pastikan event ini untuk laporan yang sama
+      if (detail && detail.reportId === reportId && detail.status) {
+        setStatus(detail.status);
       }
     };
-    
-    window.addEventListener('statusUpdated', handleUpdate);
 
-    // 2. Listen via Realtime Supabase (Langsung ke tabel reports)
+    window.addEventListener("statusUpdated", handleStatusEvent);
+
+    // --- JALUR 2: Supabase Realtime langsung ke tabel `reports` ---
+    // Ini adalah fallback: jika UPDATE ke tabel `reports` tiba lebih dulu dari log,
+    // badge tetap langsung berubah tanpa menunggu event dari Timeline.
     const channel = supabase
       .channel(`report-badge-${reportId}`)
       .on(
@@ -47,41 +62,33 @@ export default function LiveStatusBadge({
           event: "UPDATE",
           schema: "public",
           table: "reports",
-          filter: `id=eq.${reportId}`
+          filter: `id=eq.${reportId}`,
         },
         (payload) => {
-          if (payload.new && payload.new.status) {
-            setStatus(payload.new.status);
+          const newStatus = payload.new?.status as string | undefined;
+          if (newStatus) {
+            setStatus(newStatus);
           }
         }
       )
       .subscribe();
 
     return () => {
-      window.removeEventListener('statusUpdated', handleUpdate);
+      window.removeEventListener("statusUpdated", handleStatusEvent);
       supabase.removeChannel(channel);
     };
   }, [reportId]);
 
-  const styles: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-700 border border-yellow-200",
-    diproses: "bg-blue-100 text-blue-700 border border-blue-200",
-    selesai: "bg-green-100 text-green-700 border border-green-200",
-    ditolak: "bg-red-100 text-red-700 border border-red-200",
-  };
-
-  const labels: Record<string, string> = {
-    pending: "Menunggu",
-    diproses: "Diproses",
-    selesai: "Selesai",
-    ditolak: "Ditolak",
-  };
-
-  const normalizedStatus = status?.toLowerCase() || 'pending';
+  // Normalisasi: pastikan status selalu lowercase untuk key lookup
+  const normalizedStatus = (status || "pending").toLowerCase();
+  const styleClass = STATUS_STYLES[normalizedStatus] ?? STATUS_STYLES.pending;
+  const label = STATUS_LABELS[normalizedStatus] ?? status;
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-bold transition-colors duration-300 ${styles[normalizedStatus] || styles.pending}`}>
-      {labels[normalizedStatus] || status}
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors duration-300 ${styleClass}`}
+    >
+      {label}
     </span>
   );
 }
