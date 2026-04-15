@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { getReports, getReportsCount } from "@/lib/repositories/reportRepository";
-import { getCategories, getCities } from "@/lib/actions/locations";
+import { getCategories, getCities, getDistricts } from "@/lib/actions/locations";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminReportsFilter from "@/components/admin/AdminReportsFilter";
 import ReportsTable from "@/components/admin/ReportsTable";
@@ -17,6 +17,7 @@ interface Props {
     status?: string;
     category?: string;
     city?: string;
+    district?: string;
     sort?: string;
     order?: string;
     page?: string;
@@ -40,7 +41,7 @@ export default async function AdminReportsPage({
     .single();
   if (!profile || profile.role !== "admin") redirect("/");
 
-  const { search, status, category, city, sort, order, page } =
+  const { search, status, category, city, district, sort, order, page } =
     await searchParams;
 
   // Validate sort column
@@ -54,10 +55,11 @@ export default async function AdminReportsPage({
     status: status || undefined,
     category: category || undefined,
     city: city || undefined,
+    district: district || undefined,
   } as const;
 
   // Parallel fetch: paginated data + total count + dropdowns
-  const [reports, totalCount, categories, cities] = await Promise.all([
+  const [reports, totalCount, categories, cities, districts] = await Promise.all([
     getReports(supabase, {
       ...filters,
       sort: validSort,
@@ -68,6 +70,7 @@ export default async function AdminReportsPage({
     getReportsCount(supabase, filters),
     getCategories(),
     getCities(),
+    getDistricts(city || ""),
   ]);
 
   // Build a plain serialisable Record for child Client Components
@@ -104,10 +107,12 @@ export default async function AdminReportsPage({
             key={`${search ?? ""}-${status ?? ""}-${category ?? ""}-${city ?? ""}`}
             categories={categories}
             cities={cities}
+            districts={districts}
             currentSearch={search ?? ""}
             currentStatus={status ?? ""}
             currentCategory={category ?? ""}
             currentCity={city ?? ""}
+            currentDistrict={district ?? ""}
             currentSort={validSort}
             currentOrder={validOrder}
           />

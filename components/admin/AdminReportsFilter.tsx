@@ -6,21 +6,25 @@ import { useRouter } from "next/navigation";
 interface Props {
   categories: { id: string; name: string }[];
   cities: { id: string; name: string }[];
+  districts: { id: string; name: string }[];
   currentSearch: string;
   currentStatus: string;
   currentCategory: string;
   currentCity: string;
   currentSort: string;
   currentOrder: string;
+  currentDistrict: string;
 }
 
 export default function AdminReportsFilter({
   categories,
   cities,
+  districts,
   currentSearch,
   currentStatus,
   currentCategory,
   currentCity,
+  currentDistrict,
   currentSort,
   currentOrder,
 }: Props) {
@@ -36,7 +40,7 @@ export default function AdminReportsFilter({
     setSearch(currentSearch);
   }, [currentSearch]);
 
-  const applyFilters = (overrides: { search?: string; status?: string; category?: string; city?: string }) => {
+  const applyFilters = (overrides: { search?: string; status?: string; category?: string; city?: string; district?: string }) => {
     const params = new URLSearchParams();
 
     // Ambil nilai terbaru (dari override atau props saat ini)
@@ -44,11 +48,13 @@ export default function AdminReportsFilter({
     const fStatus = overrides.status !== undefined ? overrides.status : currentStatus;
     const fCat = overrides.category !== undefined ? overrides.category : currentCategory;
     const fCity = overrides.city !== undefined ? overrides.city : currentCity;
+    const fDistrict = overrides.district !== undefined ? overrides.district : currentDistrict;
 
     if (fSearch) params.set("search", fSearch);
     if (fStatus) params.set("status", fStatus);
     if (fCat) params.set("category", fCat);
     if (fCity) params.set("city", fCity);
+    if (fDistrict) params.set("district", fDistrict);
 
     if (currentSort) params.set("sort", currentSort);
     if (currentOrder) params.set("order", currentOrder);
@@ -76,7 +82,7 @@ export default function AdminReportsFilter({
     });
   };
 
-  const activeFilterCount = [currentStatus, currentCategory, currentCity, currentSearch].filter(Boolean).length;
+  const activeFilterCount = [currentStatus, currentCategory, currentCity, currentSearch, currentDistrict].filter(Boolean).length;
 
   return (
     // relative z-30 memastikan dropdown tidak tertindih tabel
@@ -136,6 +142,18 @@ export default function AdminReportsFilter({
           >
             <option value="">Semua Kota</option>
             {cities.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          
+          <select
+            value={currentDistrict}
+            disabled={isPending}
+            onChange={(e) => applyFilters({ district: e.target.value })}
+            className="flex-1 md:w-40 bg-slate-50 border border-slate-200 rounded-xl text-xs px-3 h-10 outline-none cursor-pointer focus:border-blue-500"
+          >
+            <option value="">Semua Kecamatan</option>
+            {districts.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
