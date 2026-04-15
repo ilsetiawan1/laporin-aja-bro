@@ -100,8 +100,7 @@ export default async function ReportDetailPage({ params }: Props) {
               {/* Header */}
               <div className="p-6 sm:p-8 border-b border-slate-100">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <LiveStatusBadge initialStatus={report.status} />
-                  {report.categories?.name && (
+                  <LiveStatusBadge initialStatus={report.status} reportId={report.id} />                  {report.categories?.name && (
                     <span className="text-xs font-medium text-navy/50 bg-navy/5 px-2.5 py-1 rounded-full">
                       {report.categories.name}
                     </span>
