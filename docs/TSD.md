@@ -131,6 +131,7 @@ erDiagram
     
     CATEGORIES ||--o{ REPORTS : "kategori masalah"
     
+    REPORTS ||--o{ REPORT_ATTACHMENTS : "memiliki berkas lampiran"
     REPORTS ||--o{ REPORT_VOTES : "di-vote oleh warga"
     REPORTS ||--o{ COMMENTS : "memiliki diskusi"
     REPORTS ||--o{ REPORT_STATUS_LOGS : "memiliki riwayat status"
@@ -191,6 +192,13 @@ erDiagram
         uuid id PK
         uuid report_id FK
         uuid user_id FK
+        timestamp created_at
+    }
+
+    REPORT_ATTACHMENTS {
+        uuid id PK
+        uuid report_id FK
+        string file_url
         timestamp created_at
     }
 
