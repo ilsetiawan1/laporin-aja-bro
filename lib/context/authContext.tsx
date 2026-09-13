@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-
+ 
     async function initAuth() {
       // getUser() — secure, verify ke Auth server
       const { data: { user: u } } = await supabase.auth.getUser();

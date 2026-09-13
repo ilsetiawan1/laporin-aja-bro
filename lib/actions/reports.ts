@@ -3,7 +3,6 @@
 
 import { createServerClient } from "@/lib/supabase/server";
 import * as reportService from "@/lib/services/reportService";
-import * as reportRepo from "@/lib/repositories/reportRepository";
 import type { ReportFilters, ReportWithRelations } from "@/types";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -11,7 +10,6 @@ export async function getLatestReports(): Promise<ReportWithRelations[]> {
   return reportService.getReports({ limit: 8 });
 }
 
-// lib/actions/reports.ts
 export async function getPublicReports(params: {
   search?: string;
   category?: string;
@@ -30,7 +28,7 @@ export async function getPublicReports(params: {
     limit: 50,
   };
 
-  console.log("[getPublicReports] filters sent:", JSON.stringify(filters)); // ← dan ini
+  console.log("[getPublicReports] filters sent:", JSON.stringify(filters)); 
   return reportService.getReports(filters);
 }
 
@@ -75,7 +73,7 @@ export async function submitReport(
   if (imageFiles.length > 0) {
     imageUrls = await reportService.uploadReportImages(user?.id ?? null, reportId, imageFiles);
   }
-
+  
   const newReport = await reportService.createReport({
     id: reportId,
     userId: user?.id ?? null,

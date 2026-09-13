@@ -36,7 +36,6 @@ return (
       <main className="flex-1 overflow-x-hidden">
         
         {/* ── STICKY HEADER (Mobile First) ── */}
-        {/* Mobile: pt-24 agar di bawah Navbar Mobile | Desktop: md:pt-10 & md:static (lepas sticky) */}
         <div className="sticky top-0 z-20 bg-bg/95 backdrop-blur-sm px-6 pt-24 pb-6 md:static md:bg-transparent md:backdrop-blur-none md:px-8 md:pt-10 md:pb-4">
           <div className="max-w-4xl mx-auto">
             <p className="text-navy/40 text-[10px] font-bold uppercase tracking-widest mb-1">Admin Panel</p>

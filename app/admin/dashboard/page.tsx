@@ -42,13 +42,10 @@ export default async function AdminDashboardPage() {
             <p className="text-navy/45 text-sm mt-1">Ringkasan data laporan publik</p>
           </div>
 
-          {/* ── Grid System (2/3 Left, 1/3 Right) ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
-            {/* ── KOLOM KIRI (LEBAR 2/3) ── */}
+
             <div className="lg:col-span-2 space-y-6">
               
-              {/* Stat Cards - Sekarang lebarnya sejajar dengan tabel */}
               <DashboardStatCards
                 total={stats.total}
                 pending={stats.byStatus.pending ?? 0}
@@ -62,20 +59,14 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* ── KOLOM KANAN (LEBAR 1/3) ── */}
-            {/* Kolom kanan: Kategori + Prioritas */}
-<div className="flex flex-col gap-6 lg:sticky lg:top-8">
-  
-  {/* 1. Card Kategori - Bungkus dengan kartu putih jika komponennya belum punya background */}
-  <div >
-    <CategoryBarChart data={stats.byCategory} />
-  </div>
 
-  {/* 2. Priority List - JANGAN dibungkus div putih lagi jika di dalamnya sudah ada desain kartu */}
-  {/* Kirim gabungan data agar filter 'Rendah' dan 'Sedang' di dropdown punya data untuk ditampilkan */}
-  <PriorityList reports={[...stats.highPriority, ...stats.recent]} />
+            <div className="flex flex-col gap-6 lg:sticky lg:top-8">
+              <div >
+                <CategoryBarChart data={stats.byCategory} />
+              </div>
+              <PriorityList reports={[...stats.highPriority, ...stats.recent]} />
+            </div>
 
-</div>
           </div>
 
         </div>

@@ -1,0 +1,458 @@
+{
+	"info": {
+		"_postman_id": "f8e7d6c5-b4a3-4210-9876-54321abcdef0",
+		"name": "Laporin Aja Bro API",
+		"description": "Koleksi REST API resmi untuk Laporin Aja Bro — Platform Pelaporan Fasilitas & Layanan Publik DIY dengan Supabase Backend, Row Level Security (RLS), Auto-Categorization, dan Status Timeline Audit Trail.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"description": "### 🔐 Modul Autentikasi & Profil Pengguna\nManajemen akun warga dan admin dinas berbasis Supabase GoTrue Auth dengan validasi integritas NIK (16 digit), nomor telepon, dan penetapan role (`user` vs `admin`).\n\n**Payload Contoh Registrasi:**\n```json\n{\n  \"email\": \"warga.sleman@example.com\",\n  \"password\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\",\n  \"nik\": \"3404011205980001\",\n  \"full_name\": \"Budi Santoso\",\n  \"phone_number\": \"081234567890\",\n  \"gender\": \"Laki-laki\",\n  \"birth_date\": \"1998-05-12\",\n  \"city_id\": \"80e1537d-d2d4-473f-b870-3180e7b82a33\",\n  \"district_id\": \"c7c7806f-ef40-4a9a-bb67-871cab7db532\"\n}\n```",
+			"item": [
+				{
+					"name": "Register Citizen",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"warga.sleman@example.com\",\n  \"password\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\",\n  \"nik\": \"3404011205980001\",\n  \"full_name\": \"Budi Santoso\",\n  \"phone_number\": \"081234567890\",\n  \"gender\": \"Laki-laki\",\n  \"birth_date\": \"1998-05-12\",\n  \"city_id\": \"80e1537d-d2d4-473f-b870-3180e7b82a33\",\n  \"district_id\": \"c7c7806f-ef40-4a9a-bb67-871cab7db532\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Mendaftarkan akun warga baru dengan pencegahan duplikasi NIK dan nomor HP secara otomatis."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"warga.sleman@example.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Masuk ke sistem menggunakan email dan password untuk mendapatkan sesi auth."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Profile (Me)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Mengambil data profil biodata lengkap dari pengguna yang sedang aktif."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Mengakhiri sesi aktif pengguna dan menghapus cookie autentikasi."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Master Data",
+			"description": "### 🏷️ Modul Master Data DIY\nEndpoint referensi data master untuk 9 Kategori Masalah Terstandarisasi dan Struktur Wilayah DIY (5 Kota/Kabupaten beserta seluruh Kecamatan).",
+			"item": [
+				{
+					"name": "Categories",
+					"description": "Endpoint daftar 9 kategori masalah layanan publik DIY.",
+					"item": [
+						{
+							"name": "Get All Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/master/categories",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"master",
+										"categories"
+									]
+								},
+								"description": "Mengambil seluruh 9 kategori masalah aduan di wilayah DIY (Infrastruktur, Sampah, Pungli, dsb)."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Locations",
+					"description": "Endpoint master wilayah Kota/Kabupaten dan Kecamatan di DIY.",
+					"item": [
+						{
+							"name": "Get All Cities",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/master/cities",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"master",
+										"cities"
+									]
+								},
+								"description": "Mengambil 5 entitas Kota/Kabupaten di DIY (Kota Yogyakarta, Sleman, Bantul, Kulon Progo, Gunungkidul)."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Districts by City",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/master/districts?city_id=80e1537d-d2d4-473f-b870-3180e7b82a33",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"master",
+										"districts"
+									],
+									"query": [
+										{
+											"key": "city_id",
+											"value": "80e1537d-d2d4-473f-b870-3180e7b82a33",
+											"description": "ID Kota/Kabupaten (contoh: Sleman)"
+										}
+									]
+								},
+								"description": "Mengambil daftar seluruh kecamatan berdasarkan kota/kabupaten yang dipilih."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"description": "### 📝 Modul Pengaduan & Interaksi Warga\nEndpoint lengkap untuk pembuatan aduan (dengan opsi anonim), feed publik, inspeksi detail, voting urgensi, diskusi berulir, dan moderasi admin.",
+			"item": [
+				{
+					"name": "Public Reports",
+					"description": "Kumpulan endpoint penjelajahan aduan publik dan pembuatan laporan baru oleh warga.",
+					"item": [
+						{
+							"name": "Get All Reports (Feed)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reports?city=80e1537d-d2d4-473f-b870-3180e7b82a33&status=pending",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports"
+									],
+									"query": [
+										{
+											"key": "city",
+											"value": "80e1537d-d2d4-473f-b870-3180e7b82a33",
+											"description": "Filter ID Kota (opsional)"
+										},
+										{
+											"key": "status",
+											"value": "pending",
+											"description": "Filter status: pending | diproses | selesai | ditolak"
+										},
+										{
+											"key": "category",
+											"value": "",
+											"description": "Filter ID Kategori (opsional)",
+											"disabled": true
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Pencarian kata kunci (opsional)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Mengambil daftar laporan aduan publik yang sudah difilter berdasarkan kota, status, dan kategori."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Report",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Jalan Berlubang Parah di Perempatan Jombor\",\n  \"description\": \"Ada lubang cukup dalam di sisi kiri jalan dari arah utara. Sudah menyebabkan pengendara motor jatuh karena tertutup genangan air hujan.\",\n  \"category_id\": \"857ee9c8-4c22-4956-ae95-73a7812be8cb\",\n  \"city_id\": \"80e1537d-d2d4-473f-b870-3180e7b82a33\",\n  \"district_id\": \"c7c7806f-ef40-4a9a-bb67-871cab7db532\",\n  \"address\": \"Jl. Magelang Km 6, Depan halte Trans Jogja\",\n  \"is_anonymous\": false,\n  \"image_urls\": [\n    \"https://qfuimxvkgprtsumarxsy.supabase.co/storage/v1/object/public/report_attachments/487e9f6a-8827-47e4-8aa5-10812533ab5e/37a50648-388f-4bb5-b8d7-e5ce95799c2d/1775126576270-klx5cspf1oc.jpg\"\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reports",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports"
+									]
+								},
+								"description": "Mengirimkan laporan aduan baru ke sistem dan menginisialisasi status log awal."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Report by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reports/:id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "003fe366-1fc1-41f3-9005-75153f8fc25c",
+											"description": "ID unik laporan UUID"
+										}
+									]
+								},
+								"description": "Mengambil rincian laporan aduan lengkap dengan foto, data wilayah, status log, dan skor prioritas."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Interactions",
+					"description": "Kumpulan endpoint interaksi partisipasi publik (upvoting urgensi dan diskusi berulir).",
+					"item": [
+						{
+							"name": "Toggle Upvote Report",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reports/:id/vote",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports",
+										":id",
+										"vote"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "003fe366-1fc1-41f3-9005-75153f8fc25c",
+											"description": "ID unik laporan UUID"
+										}
+									]
+								},
+								"description": "Memberikan atau membatalkan dukungan upvote pada laporan untuk menaikkan skala prioritas penanganan."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Report Comments",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reports/:id/comments",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports",
+										":id",
+										"comments"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "003fe366-1fc1-41f3-9005-75153f8fc25c",
+											"description": "ID unik laporan UUID"
+										}
+									]
+								},
+								"description": "Mengambil seluruh daftar tanggapan dan komentar berulir dari laporan."
+							},
+							"response": []
+						},
+						{
+							"name": "Add Comment",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Terima kasih atas laporannya, tim dinas terkait sedang menuju ke lokasi.\",\n  \"parent_id\": null\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reports/:id/comments",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports",
+										":id",
+										"comments"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "003fe366-1fc1-41f3-9005-75153f8fc25c",
+											"description": "ID unik laporan UUID"
+										}
+									]
+								},
+								"description": "Menambahkan tanggapan atau membalas komentar pada laporan aduan."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Admin Moderation",
+					"description": "Kumpulan endpoint khusus petugas admin dinas untuk memperbarui status pengerjaan aduan dan mencatat riwayat audit.",
+					"item": [
+						{
+							"name": "Update Report Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"diproses\",\n  \"note\": \"Survei lapangan telah dilakukan oleh tim Dinas PUPR DIY, material perbaikan sedang disiapkan.\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reports/:id/status",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reports",
+										":id",
+										"status"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "003fe366-1fc1-41f3-9005-75153f8fc25c",
+											"description": "ID unik laporan UUID"
+										}
+									]
+								},
+								"description": "Memperbarui status aduan (pending, diproses, selesai, ditolak) dan menambahkan catatan resmi ke linimasa status log."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://laporin-aja-bro.vercel.app",
+			"type": "string"
+		}
+	]
+}

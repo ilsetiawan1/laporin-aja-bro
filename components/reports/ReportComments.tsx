@@ -118,7 +118,7 @@ export default function ReportComments({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Tuliskan komentar Anda di sini..."
-            className="w-full bg-white border border-navy/10 rounded-lg p-3 text-sm focus:border-blue min-h-[100px] outline-hidden mb-3"
+            className="w-full bg-white border border-navy/10 rounded-lg p-3 text-sm focus:border-blue min-h-25 outline-hidden mb-3"
             required
             disabled={isSubmitting}
           />
