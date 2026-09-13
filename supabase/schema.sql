@@ -1,165 +1,205 @@
--- EXTENSIONS
-create extension if not exists "uuid-ossp";
+-- ============================================================
+-- MASTER DATABASE SCHEMA — LAPORIN AJA BRO
+-- Platform Pelaporan Fasilitas & Layanan Publik DIY
+-- Target Database: PostgreSQL 15+ (Supabase)
+-- ============================================================
 
--- ENUMS
-create type user_role as enum ('admin', 'user');
-create type report_status as enum ('pending', 'diproses', 'selesai', 'ditolak');
-create type report_priority as enum ('rendah', 'sedang', 'tinggi');
+-- 1. EXTENSIONS
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- PROFILES
-create table profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text,
-  role user_role default 'user',
-  created_at timestamp default now()
+-- 2. CUSTOM ENUMS
+CREATE TYPE user_role AS ENUM ('admin', 'user');
+CREATE TYPE report_status AS ENUM ('pending', 'diproses', 'selesai', 'ditolak');
+CREATE TYPE report_priority AS ENUM ('rendah', 'sedang', 'tinggi');
+
+-- 3. MASTER DATA WILAYAH & KATEGORI
+CREATE TABLE IF NOT EXISTS public.categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- CATEGORIES
-create table categories (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null,
-  created_at timestamp default now()
+CREATE TABLE IF NOT EXISTS public.cities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL UNIQUE
 );
 
--- CITIES
-create table cities (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null
+CREATE TABLE IF NOT EXISTS public.districts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  city_id UUID NOT NULL REFERENCES public.cities(id) ON DELETE CASCADE,
+  name TEXT NOT NULL
 );
 
--- DISTRICTS
-create table districts (
-  id uuid primary key default uuid_generate_v4(),
-  city_id uuid references cities(id) on delete cascade,
-  name text not null
+-- 4. PROFILES (Extends auth.users)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  role user_role DEFAULT 'user',
+  nik VARCHAR(16) UNIQUE,
+  full_name TEXT,
+  phone_number TEXT UNIQUE,
+  gender TEXT,
+  birth_date DATE,
+  city_id UUID REFERENCES public.cities(id),
+  district_id UUID REFERENCES public.districts(id),
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- REPORTS
-create table reports (
-  id uuid primary key default uuid_generate_v4(),
-  user_id uuid references profiles(id),
-  title text not null,
-  description text not null,
-  category_id uuid references categories(id),
-  city_id uuid references cities(id),
-  district_id uuid references districts(id),
-  address text,
-  is_anonymous boolean default false,
-  status report_status default 'pending',
-  priority report_priority default 'rendah',
-  image_urls text[] default '{}',        -- ← Added: storage URLs from report_attachments bucket
-  created_at timestamp default now()
+-- 5. REPORTS (Main Complaint Entity)
+CREATE TABLE IF NOT EXISTS public.reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category_id UUID NOT NULL REFERENCES public.categories(id),
+  city_id UUID NOT NULL REFERENCES public.cities(id),
+  district_id UUID REFERENCES public.districts(id),
+  address TEXT,
+  is_anonymous BOOLEAN DEFAULT false,
+  status report_status DEFAULT 'pending',
+  priority report_priority DEFAULT 'rendah',
+  priority_score INTEGER DEFAULT 0,
+  vote_count INTEGER DEFAULT 0,
+  similar_count INTEGER DEFAULT 0,
+  image_urls TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- AI ANALYSIS
-create table ai_analysis (
-  id uuid primary key default uuid_generate_v4(),
-  report_id uuid references reports(id) on delete cascade,
-  summary text,
-  category_suggestion text,
-  priority text,
-  suggested_agency text,                 -- ← Added: AI-suggested government agency
-  created_at timestamp default now()
+-- 6. REPORT ATTACHMENTS (File Attachment Details)
+CREATE TABLE IF NOT EXISTS public.report_attachments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
+  file_url TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- TRIGGER AUTO CREATE PROFILE
-create or replace function handle_new_user()
-returns trigger as $$
-begin
-  insert into profiles (id, email)
-  values (new.id, new.email)
-  on conflict (id) do nothing;
-  return new;
-end;
-$$ language plpgsql security definer set search_path = public;
-
-create trigger on_auth_user_created
-after insert on auth.users
-for each row execute procedure handle_new_user();
-
--- ======================
--- 🔐 RLS
--- ======================
-
-alter table profiles enable row level security;
-alter table reports enable row level security;
-
--- PROFILES POLICY
-create policy "Users can view own profile"
-on profiles
-for select
-using (auth.uid() = id);
-
-create policy "Public can insert profiles"
-on profiles
-for insert
-with check (true);
-
--- REPORTS POLICY
-create policy "Anyone can insert report"
-on reports
-for insert
-with check (true);
-
-create policy "Anyone can view reports"
-on reports
-for select
-using (true);
-
--- ADMIN POLICY
-create policy "Admin can update reports"
-on reports
-for update
-using (
-  exists (
-    select 1 from profiles
-    where profiles.id = auth.uid()
-    and profiles.role = 'admin'
-  )
+-- 7. REPORT VOTES (Community Urgency Upvoting)
+CREATE TABLE IF NOT EXISTS public.report_votes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT report_votes_unique UNIQUE (report_id, user_id)
 );
 
--- ======================
--- 📦 STORAGE
--- ======================
+-- 8. REPORT STATUS LOGS (Audit Trail & Timeline)
+CREATE TABLE IF NOT EXISTS public.report_status_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  note TEXT,
+  changed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Storage bucket: report_attachments (Public)
--- Created via Supabase Dashboard (Storage > New Bucket)
--- Bucket name: report_attachments
--- Public: true
--- File size limit: 5MB
--- Allowed MIME types: image/jpeg, image/png, image/webp, image/gif
-
--- Storage Policy (run in SQL editor after creating bucket):
--- insert into storage.buckets (id, name, public) values ('report_attachments', 'report_attachments', true);
--- create policy "Public can upload attachments"
---   on storage.objects for insert
---   with check (bucket_id = 'report_attachments');
--- create policy "Public can view attachments"
---   on storage.objects for select
---   using (bucket_id = 'report_attachments');
-
--- 1. Update Tabel Profiles dengan kolom lengkap & Avatar
-ALTER TABLE public.profiles 
-ADD COLUMN IF NOT EXISTS nik varchar(16) UNIQUE,
-ADD COLUMN IF NOT EXISTS full_name text,
-ADD COLUMN IF NOT EXISTS phone_number text,
-ADD COLUMN IF NOT EXISTS gender text,
-ADD COLUMN IF NOT EXISTS birth_date date,
-ADD COLUMN IF NOT EXISTS city_id uuid REFERENCES public.cities(id),
-ADD COLUMN IF NOT EXISTS district_id uuid REFERENCES public.districts(id),
-ADD COLUMN IF NOT EXISTS avatar_url text;
-
--- 2. Buat Tabel Komentar (Threaded System)
+-- 9. COMMENTS (Threaded Discussion System)
 CREATE TABLE IF NOT EXISTS public.comments (
-  id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
-  report_id uuid REFERENCES public.reports(id) ON DELETE CASCADE,
-  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  content text NOT NULL,
-  parent_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT comments_pkey PRIMARY KEY (id)
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  parent_id UUID REFERENCES public.comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Aktifkan Realtime (Pastikan publikasi 'supabase_realtime' sudah ada)
--- Jika error di sini, abaikan dulu dan setting via Dashboard Supabase (Replication)
-ALTER PUBLICATION supabase_realtime ADD TABLE public.comments;
+-- 10. AI ANALYSIS (AI-Assisted Classification & Summarization)
+CREATE TABLE IF NOT EXISTS public.ai_analysis (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
+  summary TEXT,
+  category_suggestion TEXT,
+  priority TEXT,
+  suggested_agency TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ============================================================
+-- ⚡ TRIGGERS & FUNCTIONS
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, role)
+  VALUES (new.id, new.email, 'user')
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ============================================================
+-- 🔐 ROW LEVEL SECURITY (RLS) POLICIES
+-- ============================================================
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.report_votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.report_status_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_analysis ENABLE ROW LEVEL SECURITY;
+
+-- PROFILES RLS
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Public can insert profiles" ON public.profiles
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- REPORTS RLS
+CREATE POLICY "Anyone can view reports" ON public.reports
+  FOR SELECT USING (true);
+
+CREATE POLICY "Anyone can insert report" ON public.reports
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Admin can update reports" ON public.reports
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
+-- REPORT VOTES RLS
+CREATE POLICY "Public read votes" ON public.report_votes
+  FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can vote" ON public.report_votes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own vote" ON public.report_votes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- REPORT STATUS LOGS RLS
+CREATE POLICY "Public can read status logs" ON public.report_status_logs
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only admins can insert status logs" ON public.report_status_logs
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- COMMENTS RLS
+CREATE POLICY "Public can read comments" ON public.comments
+  FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can comment" ON public.comments
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ============================================================
+-- 📦 STORAGE BUCKET SPECIFICATIONS
+-- ============================================================
+-- Bucket 1: report_attachments (Public, max 5MB, image MIME types)
+-- Bucket 2: avatars (Public, max 2MB, image MIME types)
