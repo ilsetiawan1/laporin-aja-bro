@@ -63,8 +63,8 @@ export default function LaporPageClient() {
             Baru
           </h1>
           <p className="text-white/45 text-base max-w-lg mx-auto">
-            Isi formulir di bawah ini. AI kami akan mengklasifikasi masalah dan
-            meneruskan ke instansi yang tepat.
+            Isi formulir di bawah ini. Sistem akan mengelompokkan kategori aduan dan
+            meneruskannya ke dinas terkait.
           </p>
 
           {/* Breadcrumb */}

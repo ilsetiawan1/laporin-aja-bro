@@ -95,11 +95,11 @@ const FEATURES = [
         />
       </svg>
     ),
-    title: "AI Support",
+    title: "Klasifikasi Otomatis",
     description:
-      "AI kami mengklasifikasi laporan otomatis, menentukan prioritas, dan menyarankan instansi yang tepat tanpa campur tangan manual.",
-    badge: "Powered by AI",
-    badgeClass: "bg-yellow-400/20 text-yellow-200",
+      "Sistem mengelompokkan kategori laporan secara otomatis, mengalkulasi bobot prioritas penanganan, dan merekomendasikan instansi terkait.",
+    badge: "Sistem Terpadu",
+    badgeClass: "bg-blue/20 text-blue-light",
   },
 ];
 

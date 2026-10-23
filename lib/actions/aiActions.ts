@@ -14,11 +14,11 @@ export async function generateSummaryAction(reportId: string): Promise<string> {
 
   try {
     const result = await generateReportSummary(report);
-    console.log("[AI] result:", result);
+    console.log("[Service] result:", result);
     return result;
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("429")) {
-      return "⏳ AI sedang sibuk (quota habis). Coba lagi dalam beberapa menit.";
+      return "⏳ Layanan analisis otomatis sedang sibuk. Coba lagi dalam beberapa menit.";
     }
     return "Gagal membuat ringkasan. Coba lagi.";
   }
@@ -33,7 +33,7 @@ export async function generateSuggestionAction(reportId: string): Promise<string
     return await generateAdminSuggestion(report);
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes("429")) {
-      return "⏳ AI sedang sibuk (quota habis). Coba lagi dalam beberapa menit.";
+      return "⏳ Layanan analisis otomatis sedang sibuk. Coba lagi dalam beberapa menit.";
     }
     return "Gagal membuat ringkasan. Coba lagi.";
   }

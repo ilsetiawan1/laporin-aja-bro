@@ -57,7 +57,7 @@ export default function Footer() {
               <span className="font-bold text-lg">Laporin Aja Bro</span>
             </Link>
             <p className="text-white/50 text-sm leading-relaxed mb-5">
-              Platform laporan publik berbasis AI untuk Daerah Istimewa
+              Platform pelaporan fasilitas dan layanan publik terpadu untuk Daerah Istimewa
               Yogyakarta. Suara Anda adalah perubahan nyata.
             </p>
             <div className="flex gap-2.5">

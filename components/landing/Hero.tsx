@@ -33,13 +33,6 @@ export default async function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* LEFT */}
           <div className="text-center lg:text-left">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-orange/15 border border-orange/30 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-2 h-2 bg-orange rounded-full animate-pulse" />
-              <span className="text-orange text-xs font-bold tracking-wide uppercase">
-                Platform Laporan Publik #1 DIY
-              </span>
-            </div>
 
             {/* Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-5">
@@ -54,9 +47,9 @@ export default async function Hero() {
 
             {/* Desc */}
             <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-              Suara Anda penting! Laporkan keluhan, kerusakan, atau masalah
-              lingkungan di Yogyakarta dengan mudah. AI kami membantu
-              mengklasifikasi dan meneruskan laporan ke pihak yang tepat.
+              Suara Anda penting! Laporkan keluhan fasilitas, kerusakan infrastruktur,
+              atau masalah lingkungan di Yogyakarta dengan mudah, terstruktur, dan
+              langsung terhubung ke dinas terkait.
             </p>
 
             {/* CTA */}
