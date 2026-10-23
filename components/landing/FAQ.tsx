@@ -9,7 +9,7 @@ const FAQS = [
   },
   {
     q: "Berapa lama laporan saya diproses?",
-    a: "Rata-rata laporan mulai diproses dalam 48 jam setelah dikirim. AI kami langsung mengklasifikasi dan meneruskan laporan ke instansi terkait. Status laporan bisa dipantau secara real-time di halaman Status.",
+    a: "Rata-rata laporan mulai diproses dalam 48 jam setelah dikirim. Sistem langsung memverifikasi kategori dan meneruskan laporan ke dinas atau instansi terkait. Status laporan bisa dipantau secara transparan di halaman Status.",
   },
   {
     q: "Apakah laporan saya bisa dilihat publik?",
@@ -20,8 +20,8 @@ const FAQS = [
     a: "Saat ini kami melayani 5 kabupaten/kota di Daerah Istimewa Yogyakarta: Kota Yogyakarta, Sleman, Bantul, Gunungkidul, dan Kulon Progo.",
   },
   {
-    q: "Bagaimana AI mengklasifikasi laporan saya?",
-    a: "AI kami menganalisis judul dan deskripsi laporan untuk menentukan kategori (infrastruktur, lingkungan, keamanan, dll.), prioritas, dan instansi daerah yang paling relevan untuk menangani laporan tersebut.",
+    q: "Bagaimana sistem mengelompokkan laporan saya?",
+    a: "Sistem menganalisis kata kunci judul dan deskripsi laporan untuk menentukan kategori yang tepat (infrastruktur, lingkungan, utilitas, dll.), mengalkulasi urgensi penanganan, serta mengarahkan rekomendasi ke dinas berwenang.",
   },
   {
     q: "Apa yang terjadi jika laporan saya ditolak?",

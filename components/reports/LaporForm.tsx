@@ -494,17 +494,17 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* ── AI Notice ── */}
+        {/* ── System Verification Notice ── */}
         <div className="flex items-start gap-3 bg-blue/5 border border-blue/15 rounded-xl px-4 py-3.5">
           <div className="shrink-0 mt-0.5">
             <div className="w-7 h-7 rounded-lg bg-blue/15 flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-blue/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
           <p className="text-blue/70 text-xs leading-relaxed">
-            <span className="font-bold text-blue/90">AI akan menganalisis laporan Anda</span> — mengklasifikasi prioritas dan meneruskan ke instansi yang tepat secara otomatis.
+            <span className="font-bold text-blue/90">Sistem akan memverifikasi laporan Anda</span> — mengelompokkan prioritas penanganan dan meneruskan data ke instansi yang berwenang.
           </p>
         </div>
 

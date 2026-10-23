@@ -12,8 +12,8 @@ export default function AiPanel({ reportId }: { reportId: string }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-sm">✨</div>
-        <h3 className="text-sm font-bold text-navy">AI Assistant</h3>
+        <div className="w-7 h-7 rounded-lg bg-blue/10 text-blue flex items-center justify-center text-sm font-bold">📋</div>
+        <h3 className="text-sm font-bold text-navy">Asisten Ringkasan & Tindakan</h3>
       </div>
 
       {/* Summary */}
@@ -27,7 +27,7 @@ export default function AiPanel({ reportId }: { reportId: string }) {
           disabled={loadingSummary}
           className="w-full btn-outline-dark text-xs py-2 disabled:opacity-50"
         >
-          {loadingSummary ? "Membuat ringkasan..." : "✦ Generate Ringkasan"}
+          {loadingSummary ? "Membuat ringkasan..." : "✦ Buat Ringkasan Otomatis"}
         </button>
         {summary && (
           <p className="mt-2 text-xs text-navy/70 bg-slate-50 rounded-xl p-3 leading-relaxed">
