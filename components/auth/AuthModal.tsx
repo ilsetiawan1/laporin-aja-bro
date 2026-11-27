@@ -152,10 +152,9 @@ export default function AuthModal({
                       <Image
                         src="/images/logo.png"
                         alt="Laporin Aja Bro"
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover"
-                        priority
+                        width={36}
+                        height={36}
+                        className="w-9 h-9 object-cover"
                       />
                     </div>
                     <span className="text-white font-bold text-base">Laporin Aja Bro</span>

@@ -9,14 +9,12 @@ import { submitReport } from "@/lib/actions/reports";
 import { getCategories, getCities, getDistricts } from "@/lib/actions/locations";
 import Combobox from "@/components/ui/Combobox";
 import { autoCategorize } from "@/lib/utils/autoCategorize";
-
-// ─── Local Types ─────────────────────────────────────────────
-type Category = { id: string; name: string };
-type City = { id: string; name: string };
-type District = { id: string; name: string };
+import type { Category, City, District } from "@/types";
 
 interface LaporFormProps {
   onOpenAuthModal?: (tab?: "login" | "register") => void;
+  initialCategories?: Category[];
+  initialCities?: City[];
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -32,25 +30,36 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 function getCategoryIcon(name: string): string {
-  return CATEGORY_ICONS[name] ?? "📋"; // ✅ exact match, lebih efisien
+  return CATEGORY_ICONS[name] ?? "📋";
 }
 
-export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
+function sortCategories(cats: Category[]): Category[] {
+  return [...cats].sort((a, b) => {
+    if (a.name === "Lainnya") return 1;
+    if (b.name === "Lainnya") return -1;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+export default function LaporForm({
+  onOpenAuthModal,
+  initialCategories,
+  initialCities,
+}: LaporFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // Auth state via hook (allowed exception)
   const { user, loading: authLoading } = useAuth();
 
-  // Form data options
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const [categories, setCategories] = useState<Category[]>(() =>
+    initialCategories ? sortCategories(initialCategories) : []
+  );
+  const [cities, setCities] = useState<City[]>(() => initialCities ?? []);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -61,12 +70,10 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
     is_anonymous: false,
   });
 
-  // Image state
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Result state
   const [result, setResult] = useState<{ error?: string; success?: boolean } | null>(null);
   const [charCount, setCharCount] = useState({ title: 0, description: 0 });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,26 +93,21 @@ export default function LaporForm({ onOpenAuthModal }: LaporFormProps) {
     }
   }, []);
 
-  // Load categories + cities via server actions (no direct supabase)
-useEffect(() => {
-  async function loadData() {
-    const [cats, cits] = await Promise.all([
-      getCategories(),
-      getCities(),
-    ]);
+  // Load categories + cities via server actions ONLY if not preloaded from SSR
+  useEffect(() => {
+    if (initialCategories?.length && initialCities?.length) return;
 
-    // --- LOGIKA SORTING DISINI ---
-    const sortedCategories = [...cats].sort((a, b) => {
-      if (a.name === "Lainnya") return 1;  // Pindahkan "Lainnya" ke bawah
-      if (b.name === "Lainnya") return -1; // Jaga yang lain tetap di atas
-      return a.name.localeCompare(b.name); // Sisanya urutkan sesuai abjad A-Z
-    });
+    async function loadData() {
+      const [cats, cits] = await Promise.all([
+        initialCategories?.length ? Promise.resolve(initialCategories) : getCategories(),
+        initialCities?.length ? Promise.resolve(initialCities) : getCities(),
+      ]);
 
-    setCategories(sortedCategories);
-    setCities(cits);
-  }
-  loadData();
-}, []);
+      setCategories(sortCategories(cats));
+      setCities(cits);
+    }
+    loadData();
+  }, [initialCategories, initialCities]);
 
   // Load districts when city changes via server action
   useEffect(() => {
@@ -131,30 +133,27 @@ useEffect(() => {
     if (name === "description") {
       setCharCount((prev) => ({ ...prev, description: value.length }));
 
-      // Debounce auto-kategorisasi 500ms
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
         if (value.length < 10) {
           setDetectedCategory(null);
           return;
         }
-        const result = await autoCategorize(value, categories);
-        if (result && !categoryOverridden) {
-          setDetectedCategory(result);
-          setFormData((prev) => ({ ...prev, category_id: result.id }));
-        } else if (!result) {
+        const detected = await autoCategorize(value, categories);
+        if (detected && !categoryOverridden) {
+          setDetectedCategory(detected);
+          setFormData((prev) => ({ ...prev, category_id: detected.id }));
+        } else if (!detected) {
           setDetectedCategory(null);
         }
       }, 500);
     }
-    // Jika user manual ubah kategori, tandai sebagai override
     if (name === "category_id") {
       setCategoryOverridden(true);
       setDetectedCategory(null);
     }
   };
 
-  // Image helpers
   const addFiles = useCallback((files: FileList | File[]) => {
     const arr = Array.from(files).filter((f) => f.type.startsWith("image/")).slice(0, 4);
     if (arr.length === 0) return;
@@ -174,7 +173,6 @@ useEffect(() => {
     });
   };
 
-  // Drag & Drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -210,23 +208,21 @@ useEffect(() => {
       } else {
         toast.success("Berhasil!", { description: "Laporan Anda telah terkirim." });
         setResult({ success: true });
-        setTimeout(() => router.push("/status"), 2000);
+        setTimeout(() => router.push("/reports"), 2000);
       }
     });
   };
 
-  // ── Form Input Styles ──
   const inputClass =
-    "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue/50 focus:border-transparent focus:bg-white/10 transition-all duration-300 shadow-inner";
+    "w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/55 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue/50 focus:border-transparent focus:bg-white/10 transition-all duration-300 shadow-inner";
 
-  const labelClass = "block text-xs font-bold text-white/50 mb-2 uppercase tracking-widest";
+  const labelClass = "block text-xs font-bold text-white/80 mb-2 uppercase tracking-widest";
 
   return (
     <div className="w-full">
-      {/* Error */}
       {result?.error && (
-        <div className="flex items-center gap-3 bg-red/10 border border-red/25 text-red/90 rounded-xl px-4 py-3 mb-6 text-sm">
-          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-center gap-3 bg-red/15 border border-red/30 text-red-200 rounded-xl px-4 py-3 mb-6 text-sm">
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           {result.error}
@@ -234,11 +230,10 @@ useEffect(() => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-
         {/* ── Judul ── */}
         <div>
-          <label className={labelClass}>
-            Judul Laporan <span className="text-red/70">*</span>
+          <label htmlFor="lapor-title" className={labelClass}>
+            Judul Laporan <span className="text-red-400" aria-hidden="true">*</span>
           </label>
           <input
             id="lapor-title"
@@ -252,14 +247,14 @@ useEffect(() => {
             required
             disabled={isPending}
           />
-          <p className="text-white/25 text-xs mt-1.5 text-right">{charCount.title}/120</p>
+          <p className="text-white/65 text-xs mt-1.5 text-right">{charCount.title}/120</p>
         </div>
 
         {/* ── Kategori + Anonim toggle ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           <div>
-            <label className={labelClass}>
-              Kategori <span className="text-red/70">*</span>
+            <label htmlFor="lapor-category" className={labelClass}>
+              Kategori <span className="text-red-400" aria-hidden="true">*</span>
             </label>
             <div className="relative">
               <select
@@ -272,26 +267,19 @@ useEffect(() => {
                 disabled={isPending}
               >
                 <option value="" className="bg-[#1a1f2e]">Pilih kategori...</option>
-                
+
                 {categories.length === 0 && (
                   <option disabled className="bg-[#1a1f2e]">Memuat...</option>
                 )}
 
-                {/* LOGIKA SORTING LANGSUNG DI SINI */}
-                {[...categories]
-                  .sort((a, b) => {
-                    if (a.name === "Lainnya") return 1;  // Pindahkan ke bawah
-                    if (b.name === "Lainnya") return -1; // Jaga yang lain tetap di atas
-                    return a.name.localeCompare(b.name); // Urutkan sisanya A-Z
-                  })
-                  .map((cat) => (
-                    <option key={cat.id} value={cat.id} className="bg-[#1a1f2e]">
-                      {getCategoryIcon(cat.name)} {cat.name}
-                    </option>
-                  ))}
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id} className="bg-[#1a1f2e]">
+                    {getCategoryIcon(cat.name)} {cat.name}
+                  </option>
+                ))}
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/30">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/60">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -300,23 +288,25 @@ useEffect(() => {
 
           {/* Anonim Toggle */}
           <div>
-            <label className={labelClass}>Mode Pelaporan</label>
+            <span id="lapor-mode-label" className={labelClass}>Mode Pelaporan</span>
             <button
               type="button"
+              aria-labelledby="lapor-mode-label"
+              aria-pressed={formData.is_anonymous}
               onClick={() => setFormData((prev) => ({ ...prev, is_anonymous: !prev.is_anonymous }))}
               disabled={isPending}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 text-sm ${formData.is_anonymous
-                  ? "bg-orange/10 border-orange/30 text-orange"
-                  : "bg-white/5 border-white/10 text-white/60"
+                  ? "bg-orange/15 border-orange/40 text-orange-300"
+                  : "bg-white/5 border-white/15 text-white/80"
                 }`}
             >
               <span className="flex items-center gap-2">
-                <span>{formData.is_anonymous ? "🕶️" : "👤"}</span>
+                <span aria-hidden="true">{formData.is_anonymous ? "🕶️" : "👤"}</span>
                 <span className="font-semibold">
                   {formData.is_anonymous ? "Laporan Anonim" : "Atas Nama Saya"}
                 </span>
               </span>
-              <div className={`w-9 h-5 rounded-full transition-colors relative ${formData.is_anonymous ? "bg-orange" : "bg-white/15"}`}>
+              <div className={`w-9 h-5 rounded-full transition-colors relative ${formData.is_anonymous ? "bg-orange" : "bg-white/20"}`}>
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${formData.is_anonymous ? "left-4" : "left-0.5"}`} />
               </div>
             </button>
@@ -326,11 +316,13 @@ useEffect(() => {
         {/* ── Kota + Kecamatan ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className={labelClass}>
-              Kota/Kabupaten <span className="text-red/70">*</span>
-            </label>
+            <span id="lapor-city-label" className={labelClass}>
+              Kota/Kabupaten <span className="text-red-400" aria-hidden="true">*</span>
+            </span>
             <div className="relative z-20">
               <Combobox
+                id="lapor-city"
+                ariaLabelledBy="lapor-city-label"
                 options={cities}
                 value={formData.city_id}
                 onChange={(id) => setFormData((prev) => ({ ...prev, city_id: id }))}
@@ -341,9 +333,11 @@ useEffect(() => {
           </div>
 
           <div className="relative z-10">
-            <label className={labelClass}>Kecamatan</label>
+            <span id="lapor-district-label" className={labelClass}>Kecamatan</span>
             <div>
               <Combobox
+                id="lapor-district"
+                ariaLabelledBy="lapor-district-label"
                 options={districts}
                 value={formData.district_id}
                 onChange={(id) => setFormData((prev) => ({ ...prev, district_id: id }))}
@@ -362,7 +356,7 @@ useEffect(() => {
 
         {/* ── Alamat Detail ── */}
         <div>
-          <label className={labelClass}>Alamat Lengkap</label>
+          <label htmlFor="lapor-address" className={labelClass}>Alamat Lengkap</label>
           <input
             id="lapor-address"
             name="address"
@@ -377,8 +371,8 @@ useEffect(() => {
 
         {/* ── Deskripsi ── */}
         <div>
-          <label className={labelClass}>
-            Detail Laporan <span className="text-red/70">*</span>
+          <label htmlFor="lapor-description" className={labelClass}>
+            Detail Laporan <span className="text-red-400" aria-hidden="true">*</span>
           </label>
           <textarea
             id="lapor-description"
@@ -392,11 +386,11 @@ useEffect(() => {
             disabled={isPending}
             maxLength={500}
           />
-          <p className="text-white/25 text-xs mt-1.5 text-right">{charCount.description}/500</p>
+          <p className="text-white/65 text-xs mt-1.5 text-right">{charCount.description}/500</p>
           {detectedCategory && (
             <div className="flex items-center justify-between mt-2">
-              <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-400/10 border border-green-400/20 px-3 py-1.5 rounded-full">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <span className="flex items-center gap-1.5 text-xs text-green-300 bg-green-400/15 border border-green-400/25 px-3 py-1.5 rounded-full">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 Terdeteksi: <strong>{detectedCategory.name}</strong>
@@ -408,7 +402,7 @@ useEffect(() => {
                   setDetectedCategory(null);
                   setFormData((prev) => ({ ...prev, category_id: "" }));
                 }}
-                className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                className="text-xs text-white/70 hover:text-white transition-colors"
               >
                 Ubah manual
               </button>
@@ -418,9 +412,9 @@ useEffect(() => {
 
         {/* ── Upload Bukti Foto ── */}
         <div>
-          <label className={labelClass}>
+          <label htmlFor="lapor-photos" className={labelClass}>
             Bukti Foto{" "}
-            <span className="text-white/25 normal-case font-normal tracking-normal">
+            <span className="text-white/65 normal-case font-normal tracking-normal">
               (opsional, maks 4)
             </span>
           </label>
@@ -434,10 +428,11 @@ useEffect(() => {
             onClick={() => fileInputRef.current?.click()}
             className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
                 ? "border-blue/60 bg-blue/10"
-                : "border-white/15 hover:border-white/30 hover:bg-white/5"
+                : "border-white/20 hover:border-white/35 hover:bg-white/5"
               }`}
           >
             <input
+              id="lapor-photos"
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -447,16 +442,16 @@ useEffect(() => {
             />
             {imageFiles.length === 0 ? (
               <div className="space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-                  <svg className="w-5 h-5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-white/40">
-                    <span className="text-blue/80 font-semibold">Klik untuk upload</span> atau drag & drop
+                  <p className="text-sm text-white/75">
+                    <span className="text-blue-300 font-semibold">Klik untuk upload</span> atau drag & drop
                   </p>
-                  <p className="text-xs text-white/25 mt-0.5">PNG, JPG, WebP — maks 5MB per foto</p>
+                  <p className="text-xs text-white/65 mt-0.5">PNG, JPG, WebP — maks 5MB per foto</p>
                 </div>
               </div>
             ) : (
@@ -471,10 +466,11 @@ useEffect(() => {
                     />
                     <button
                       type="button"
+                      aria-label={`Hapus foto ${i + 1}`}
                       onClick={() => removeImage(i)}
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                     >
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -483,10 +479,11 @@ useEffect(() => {
                 {imageFiles.length < 4 && (
                   <button
                     type="button"
+                    aria-label="Tambah foto bukti"
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square border-2 border-dashed border-white/15 rounded-lg flex items-center justify-center hover:border-white/30 transition-colors"
+                    className="aspect-square border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center hover:border-white/35 transition-colors"
                   >
-                    <span className="text-white/30 text-2xl">+</span>
+                    <span className="text-white/70 text-2xl">+</span>
                   </button>
                 )}
               </div>
@@ -495,16 +492,16 @@ useEffect(() => {
         </div>
 
         {/* ── System Verification Notice ── */}
-        <div className="flex items-start gap-3 bg-blue/5 border border-blue/15 rounded-xl px-4 py-3.5">
+        <div className="flex items-start gap-3 bg-blue-950/60 border border-blue-400/25 rounded-xl px-4 py-3.5">
           <div className="shrink-0 mt-0.5">
-            <div className="w-7 h-7 rounded-lg bg-blue/15 flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-blue/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
-          <p className="text-blue/70 text-xs leading-relaxed">
-            <span className="font-bold text-blue/90">Sistem akan memverifikasi laporan Anda</span> — mengelompokkan prioritas penanganan dan meneruskan data ke instansi yang berwenang.
+          <p className="text-blue-200 text-xs leading-relaxed">
+            <span className="font-bold text-white">Sistem akan memverifikasi laporan Anda</span> — mengelompokkan prioritas penanganan dan meneruskan data ke instansi yang berwenang.
           </p>
         </div>
 
@@ -515,12 +512,12 @@ useEffect(() => {
           disabled={isPending || authLoading}
           className={`w-full py-4 rounded-2xl font-black text-white text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.98] shadow-lg ${user
               ? "bg-blue hover:bg-blue-hover shadow-blue/20 hover:shadow-blue/30"
-              : "bg-orange hover:bg-orange-hover shadow-orange/20 hover:shadow-orange/30"
+              : "bg-[#c2410c] hover:bg-[#9a3412] shadow-orange-900/25 hover:shadow-orange-900/35"
             } ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}
         >
           {isPending ? (
             <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
@@ -528,14 +525,14 @@ useEffect(() => {
             </>
           ) : user ? (
             <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
               Kirim Laporan
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
               </svg>
               Login untuk Melapor
@@ -544,7 +541,7 @@ useEffect(() => {
         </button>
 
         {!user && !authLoading && (
-          <p className="text-center text-white/30 text-xs">
+          <p className="text-center text-white/70 text-xs">
             Kamu bisa isi form terlebih dahulu, lalu login saat mau kirim
           </p>
         )}

@@ -1,13 +1,10 @@
 // components/landing/Hero.tsx
 import Link from "next/link";
-import { createServerClient } from "@/lib/supabase/server";
+import { getCachedServerUser } from "@/lib/supabase/server";
 import HeroBackground from "./HeroBackground";
 
 export default async function Hero() {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCachedServerUser();
 
   return (
     <section
@@ -55,15 +52,15 @@ export default async function Hero() {
             {/* CTA */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
-                href={user ? "/dashboard/reports" : "#quick-report"}
-                className="btn-orange text-base justify-center shadow-xl shadow-orange/25"
+                href={user ? "/dashboard/reports" : "#add-report"}
+                className="btn-orange text-base justify-center shadow-xl shadow-orange-900/25"
               >
                 + Laporkan Sekarang
               </Link>
 
               <Link
-                href="/status"
-                className="btn-outline text-base justify-center border-white/20 text-white/80 hover:bg-white/10"
+                href="/reports"
+                className="btn-outline text-base justify-center border-white/25 text-white/90 hover:bg-white/10"
               >
                 Lihat Laporan
               </Link>
@@ -80,7 +77,7 @@ export default async function Hero() {
                   <div className="text-xl sm:text-2xl font-extrabold text-orange">
                     {stat.value}
                   </div>
-                  <div className="text-white/50 text-xs sm:text-sm mt-0.5">
+                  <div className="text-white/70 text-xs sm:text-sm mt-0.5">
                     {stat.label}
                   </div>
                 </div>
@@ -123,14 +120,14 @@ export default async function Hero() {
                         </span>
                       </div>
 
-                      <p className="text-white/50 text-xs">
+                      <p className="text-white/70 text-xs">
                         {item.city}
                       </p>
                     </div>
                   ))}
 
                   <div className="text-center pt-1">
-                    <span className="text-white/40 text-xs">
+                    <span className="text-white/70 text-xs">
                       +1.200 laporan lainnya
                     </span>
                   </div>

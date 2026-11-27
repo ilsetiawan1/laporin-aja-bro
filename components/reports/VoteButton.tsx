@@ -45,7 +45,6 @@ export default function VoteButton({
   const badgeClass = getPriorityBadgeClass(priority);
 
   const handleVote = () => {
-    console.log("CLICK:", { userId, authLoading, isPending });
     if (authLoading) return;
 
     if (!userId) {
@@ -120,8 +119,8 @@ export default function VoteButton({
         disabled={isPending || !userId || authLoading}
         aria-label={hasVoted ? "Batalkan dukungan" : "Dukung laporan ini"}
         className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm border-2 transition-all duration-200 active:scale-95 ${hasVoted
-          ? "bg-orange text-white border-orange shadow-orange/25 shadow-md"
-          : "bg-white text-navy/60 border-navy/15 hover:border-orange/40 hover:bg-orange/5 hover:text-orange"
+          ? "bg-[#c2410c] text-white border-[#c2410c] shadow-orange-900/25 shadow-md"
+          : "bg-white text-navy/70 border-navy/15 hover:border-orange/40 hover:bg-orange/5 hover:text-[#c2410c]"
           } ${isPending ? "opacity-60 cursor-not-allowed" : ""} ${!userId ? "cursor-not-allowed opacity-50" : ""
           }`}
       >

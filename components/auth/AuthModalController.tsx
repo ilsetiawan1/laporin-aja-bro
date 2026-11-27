@@ -1,8 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback } from "react";
-import AuthModal from "@/components/auth/AuthModal";
+
+const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), {
+  ssr: false,
+});
 
 export default function AuthModalController() {
   const searchParams = useSearchParams();
@@ -20,6 +24,8 @@ export default function AuthModalController() {
     // Refresh the page data so Navbar and other server components reflect new auth state
     router.refresh();
   }, [router]);
+
+  if (!isOpen) return null;
 
   return (
     <AuthModal

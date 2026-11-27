@@ -17,8 +17,6 @@ export async function getPublicReports(params: {
   district?: string;
   status?: string;
 }): Promise<ReportWithRelations[]> {
-  console.log("[getPublicReports] params received:", JSON.stringify(params)); // ← tambah ini
-
   const filters: ReportFilters = {
     search: params.search,
     category: params.category,
@@ -28,7 +26,6 @@ export async function getPublicReports(params: {
     limit: 50,
   };
 
-  console.log("[getPublicReports] filters sent:", JSON.stringify(filters)); 
   return reportService.getReports(filters);
 }
 

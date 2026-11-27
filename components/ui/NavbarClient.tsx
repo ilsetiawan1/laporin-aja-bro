@@ -17,7 +17,7 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -80,10 +80,9 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
               <Image
                 src="/images/logo.png"
                 alt="Laporin Aja Bro Logo"
-                fill
-                sizes="28px"
-                className="object-cover"
-                priority
+                width={28}
+                height={28}
+                className="w-7 h-7 object-cover"
               />
             </div>
             <span className="text-white font-bold text-sm whitespace-nowrap">
@@ -127,7 +126,7 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
               <button
                 id="navbar-register-btn"
                 onClick={() => openModal("register")}
-                className="bg-orange hover:bg-orange-hover text-white font-semibold text-sm px-5 py-2 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-orange/30 whitespace-nowrap"
+                className="bg-[#c2410c] hover:bg-[#9a3412] text-white font-semibold text-sm px-5 py-2 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-orange-900/30 whitespace-nowrap"
               >
                 Daftar
               </button>
@@ -197,7 +196,7 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-7 h-7 rounded-lg overflow-hidden shadow-md shadow-blue/40">
-              <Image src="/images/logo.png" alt="Laporin Aja Bro Logo" fill sizes="28px" className="object-cover" priority />
+              <Image src="/images/logo.png" alt="Laporin Aja Bro Logo" width={28} height={28} className="w-7 h-7 object-cover" />
             </div>
             <span className="text-white font-bold text-sm">Laporin Aja Bro</span>
           </Link>
@@ -262,7 +261,7 @@ export default function NavbarClient({ initialProfile }: { initialProfile: any }
                   <button
                     id="navbar-mobile-register"
                     onClick={() => openModal("register")}
-                    className="flex-1 text-center bg-orange hover:bg-orange-hover text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+                    className="flex-1 text-center bg-[#c2410c] hover:bg-[#9a3412] text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
                   >
                     Daftar
                   </button>
