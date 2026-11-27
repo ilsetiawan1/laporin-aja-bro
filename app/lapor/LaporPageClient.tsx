@@ -2,15 +2,18 @@
 
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import LaporForm from "@/components/reports/LaporForm";
-import AuthModal from "@/components/auth/AuthModal";
+
+const AuthModal = dynamic(() => import("@/components/auth/AuthModal"), {
+  ssr: false,
+});
 
 export default function LaporPageClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
 
@@ -26,12 +29,14 @@ export default function LaporPageClient() {
 
   return (
     <main className="flex flex-col min-h-screen bg-[#0b0f1a]">
-      {/* Auth Modal (inline — not URL-driven, triggered by form) */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={closeAuthModal}
-        defaultTab={authModalTab}
-      />
+      {/* Auth Modal (lazy-loaded only when triggered by form) */}
+      {authModalOpen && (
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={closeAuthModal}
+          defaultTab={authModalTab}
+        />
+      )}
 
       {/* ── Hero Banner ── */}
       <div className="relative pt-20 pb-0 overflow-hidden">
