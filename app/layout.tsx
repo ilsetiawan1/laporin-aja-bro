@@ -13,11 +13,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Laporin Aja Bro – Platform Laporan Publik",
   description: "Laporkan masalah di sekitar Anda dengan mudah dan cepat.",
-  icons: {
-    icon: [
-      { url: "/images/logo.png", type: "image/png" },
-    ],
-  },
 };
 
 export default function RootLayout({
