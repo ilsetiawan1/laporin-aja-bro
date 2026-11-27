@@ -2,12 +2,11 @@
 
 "use client";
 
-import { supabase } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getPublicReports } from "@/lib/actions/reports";
-import type { ReportWithRelations } from "@/types";
+import type { Category, City, ReportWithRelations } from "@/types";
 import { getUserVotedIdsAction } from "@/lib/actions/votes";
 import { useAuth } from "@/lib/context/authContext";
 import VoteButton from "@/components/reports/VoteButton";
@@ -57,9 +56,14 @@ const sortReports = (data: ReportWithRelations[]) => {
 
 export default function LatestReportsInteractive({
   initialReports,
+  initialCategories,
+  initialCities,
 }: {
   initialReports: ReportWithRelations[];
+  initialCategories?: Category[];
+  initialCities?: City[];
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [reports, setReports] = useState<ReportWithRelations[]>(
     sortReports(initialReports).slice(0, 4)
   );
@@ -111,32 +115,61 @@ export default function LatestReportsInteractive({
     getUserVotedIdsAction().then((ids) => setVotedIds(new Set(ids)));
   }, [user]);
 
+  // Defer Realtime WebSocket connection until this section nears the viewport
   useEffect(() => {
-    const channel = supabase
-      .channel("latest-reports-status")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "reports" },
-        (payload) => {
-          setReports((prev) =>
-            prev.map((r) =>
-              r.id === payload.new.id
-                ? { ...r, status: payload.new.status }
-                : r
-            )
-          );
+    const el = containerRef.current;
+    if (!el) return;
+
+    let active = true;
+    let cleanupRealtime: (() => void) | null = null;
+
+    const startRealtime = async () => {
+      const { supabase } = await import("@/lib/supabase/client");
+      if (!active) return;
+
+      const channel = supabase
+        .channel("latest-reports-status")
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "reports" },
+          (payload) => {
+            setReports((prev) =>
+              prev.map((r) =>
+                r.id === payload.new.id
+                  ? { ...r, status: payload.new.status }
+                  : r
+              )
+            );
+          }
+        )
+        .subscribe();
+
+      cleanupRealtime = () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          observer.disconnect();
+          startRealtime();
         }
-      )
-      .subscribe();
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(el);
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      observer.disconnect();
+      cleanupRealtime?.();
     };
   }, []);
 
-
   return (
-    <div className="w-full">
+    <div ref={containerRef} className="w-full">
       <ReportFilters
         search={search}
         setSearch={setSearch}
@@ -149,6 +182,8 @@ export default function LatestReportsInteractive({
         filterCategory={filterCategory}
         setFilterCategory={setFilterCategory}
         totalReports={reports.length}
+        initialCategories={initialCategories}
+        initialCities={initialCities}
       />
 
       {/* Grid laporan */}

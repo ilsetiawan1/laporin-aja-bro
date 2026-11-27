@@ -88,8 +88,6 @@ export default function ReportList({
     if (filterCity) params.set("city", filterCity);
     if (filterDistrict) params.set("district", filterDistrict);
 
-    console.log("[fetchReports CLIENT] params:", params.toString()); // debug
-
     const res = await fetch(`/api/reports?${params.toString()}`);
     const data = await res.json();
     setReports(data);

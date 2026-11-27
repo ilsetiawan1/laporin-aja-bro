@@ -1,22 +1,17 @@
 import Link from "next/link";
 import { getLatestReports } from "@/lib/actions/reports";
 import LatestReportsInteractive from "./LatestReportsInteractive";
+import type { Category, City } from "@/types";
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: "badge-pending",
-  diproses: "badge-diproses",
-  selesai: "badge-selesai",
-  ditolak: "badge-ditolak",
-};
+interface LatestReportsProps {
+  initialCategories?: Category[];
+  initialCities?: City[];
+}
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Menunggu",
-  diproses: "Diproses",
-  selesai: "Selesai",
-  ditolak: "Ditolak",
-};
-
-export default async function LatestReports() {
+export default async function LatestReports({
+  initialCategories,
+  initialCities,
+}: LatestReportsProps) {
   const reports = await getLatestReports();
 
   return (
@@ -29,7 +24,7 @@ export default async function LatestReports() {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-navy">
               Laporan Terbaru
             </h2>
-            <p className="text-navy/55 text-sm mt-2">
+            <p className="text-navy/65 text-sm mt-2">
               Laporan publik terbaru dari masyarakat DIY
             </p>
           </div>
@@ -45,6 +40,7 @@ export default async function LatestReports() {
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -57,13 +53,14 @@ export default async function LatestReports() {
 
         {/* Interactive Report Cards */}
         {reports.length === 0 ? (
-          <div className="text-center py-20 text-navy/40">
+          <div className="text-center py-20 text-navy/60">
             <svg
               className="w-14 h-14 mx-auto mb-4 opacity-30"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={1}
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -80,10 +77,12 @@ export default async function LatestReports() {
             </Link>
           </div>
         ) : (
-          <LatestReportsInteractive initialReports={reports}  />
+          <LatestReportsInteractive
+            initialReports={reports}
+            initialCategories={initialCategories}
+            initialCities={initialCities}
+          />
         )}
-
-
       </div>
     </section>
   );

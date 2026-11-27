@@ -16,6 +16,8 @@ interface ReportFiltersProps {
   filterCategory: string;
   setFilterCategory: (v: string) => void;
   totalReports: number;
+  initialCategories?: Category[];
+  initialCities?: City[];
 }
 
 export default function ReportFilters({
@@ -30,9 +32,11 @@ export default function ReportFilters({
   filterCategory,
   setFilterCategory,
   totalReports,
+  initialCategories,
+  initialCities,
 }: ReportFiltersProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const [categories, setCategories] = useState<Category[]>(() => initialCategories ?? []);
+  const [cities, setCities] = useState<City[]>(() => initialCities ?? []);
   const [districts, setDistricts] = useState<District[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -40,15 +44,21 @@ export default function ReportFilters({
     if (filterStatus || filterCity || filterDistrict || filterCategory) {
       setFilterOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load initial options
+  // Load initial options only if not preloaded via SSR props
   useEffect(() => {
-    Promise.all([getCategories(), getCities()]).then(([cats, cits]) => {
+    if (initialCategories?.length && initialCities?.length) return;
+
+    Promise.all([
+      initialCategories?.length ? Promise.resolve(initialCategories) : getCategories(),
+      initialCities?.length ? Promise.resolve(initialCities) : getCities(),
+    ]).then(([cats, cits]) => {
       setCategories(cats);
       setCities(cits);
     });
-  }, []);
+  }, [initialCategories, initialCities]);
 
   // Load districts when city changes
   useEffect(() => {
@@ -59,7 +69,7 @@ export default function ReportFilters({
     }
     getDistricts(filterCity).then((data) => {
       setDistricts(data);
-      setFilterDistrict(""); // Reset district
+      setFilterDistrict("");
     });
   }, [filterCity, setFilterDistrict]);
 
@@ -76,20 +86,21 @@ export default function ReportFilters({
 
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 mb-6 shadow-md shadow-navy/10 relative z-20">
-      {/* Tambah di atas div search — tampil hanya jika ada category filter */}
       {filterCategory && (
         <div className="flex items-center gap-2 mb-3 p-2.5 bg-orange/5 border border-orange/20 rounded-xl">
-          <p className="text-xs text-orange font-medium flex-1">
+          <p className="text-xs text-[#c2410c] font-medium flex-1">
             Menampilkan laporan serupa
-            {categories.find(c => c.id === filterCategory) && (
-              <span className="font-bold"> · {categories.find(c => c.id === filterCategory)?.name}</span>
+            {categories.find((c) => c.id === filterCategory) && (
+              <span className="font-bold"> · {categories.find((c) => c.id === filterCategory)?.name}</span>
             )}
           </p>
           <button
+            type="button"
+            aria-label="Hapus filter kategori"
             onClick={() => setFilterCategory("")}
-            className="text-orange/60 hover:text-orange transition-colors"
+            className="text-[#c2410c]/70 hover:text-[#c2410c] transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -100,11 +111,12 @@ export default function ReportFilters({
         <div className="relative flex-1 group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
             <svg
-              className="w-4 h-4 text-navy/35 group-focus-within:text-blue transition-colors"
+              className="w-4 h-4 text-navy/50 group-focus-within:text-blue transition-colors"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
+              aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -115,6 +127,7 @@ export default function ReportFilters({
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setFilterOpen(true)}
             placeholder="Cari laporan..."
+            aria-label="Cari laporan"
             className="input-field pl-10! w-full transition-all duration-300"
             id="shared-search"
           />
@@ -122,11 +135,15 @@ export default function ReportFilters({
 
         {/* Toggle Filter Button */}
         <button
+          type="button"
+          aria-expanded={filterOpen}
           onClick={() => setFilterOpen((prev) => !prev)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 shrink-0 ${filterOpen ? "border-blue/40 text-blue bg-blue/5" : "border-slate-200 text-navy/50 bg-white hover:border-blue/30 hover:text-blue"
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 shrink-0 ${filterOpen
+              ? "border-blue/40 text-blue bg-blue/5"
+              : "border-slate-200 text-navy/70 bg-white hover:border-blue/30 hover:text-blue"
             }`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2" />
           </svg>
           Filter
@@ -137,7 +154,12 @@ export default function ReportFilters({
       {/* Filter Panel */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${filterOpen ? "max-h-[500px] opacity-100 mt-3" : "max-h-0 opacity-0 pointer-events-none"}`}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input-field">
+          <select
+            aria-label="Filter berdasarkan status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="input-field"
+          >
             <option value="">Semua Status</option>
             <option value="pending">Menunggu</option>
             <option value="diproses">Diproses</option>
@@ -145,21 +167,37 @@ export default function ReportFilters({
             <option value="ditolak">Ditolak</option>
           </select>
 
-          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field">
+          <select
+            aria-label="Filter berdasarkan kategori"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="input-field"
+          >
             <option value="">Semua Kategori</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
 
-          <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)} className="input-field">
+          <select
+            aria-label="Filter berdasarkan kota"
+            value={filterCity}
+            onChange={(e) => setFilterCity(e.target.value)}
+            className="input-field"
+          >
             <option value="">Semua Kota</option>
             {cities.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
 
-          <select value={filterDistrict} onChange={(e) => setFilterDistrict(e.target.value)} className="input-field" disabled={!filterCity}>
+          <select
+            aria-label="Filter berdasarkan kecamatan"
+            value={filterDistrict}
+            onChange={(e) => setFilterDistrict(e.target.value)}
+            className="input-field"
+            disabled={!filterCity}
+          >
             <option value="">Semua Kecamatan</option>
             {districts.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
@@ -171,10 +209,10 @@ export default function ReportFilters({
       {/* Info hasil filter + reset */}
       {hasFilters && (
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-          <p className="text-navy/50 text-xs">
+          <p className="text-navy/65 text-xs">
             Menampilkan <span className="font-semibold text-navy">{totalReports}</span> laporan
           </p>
-          <button onClick={clearFilters} className="text-xs text-blue font-semibold hover:underline">
+          <button type="button" onClick={clearFilters} className="text-xs text-blue font-semibold hover:underline">
             Reset filter
           </button>
         </div>

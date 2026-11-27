@@ -2,8 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import LaporForm from "@/components/reports/LaporForm";
+import type { Category, City } from "@/types";
 
-export default function MiniFormCTA() {
+interface MiniFormCTAProps {
+  initialCategories?: Category[];
+  initialCities?: City[];
+}
+
+export default function MiniFormCTA({
+  initialCategories,
+  initialCities,
+}: MiniFormCTAProps) {
   const router = useRouter();
 
   const handleOpenAuthModal = (tab?: "login" | "register") => {
@@ -26,7 +35,7 @@ export default function MiniFormCTA() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-navy mb-3">
             Ada masalah? Laporkan sekarang
           </h2>
-          <p className="text-navy/55 text-sm">
+          <p className="text-navy/65 text-sm">
             Isi detail laporan Anda di bawah ini—kami akan memproses dan meneruskannya ke instansi terkait.
           </p>
         </div>
@@ -36,9 +45,13 @@ export default function MiniFormCTA() {
           {/* Decorative glows inside the dark card */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange/5 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div className="relative z-10">
-            <LaporForm onOpenAuthModal={handleOpenAuthModal} />
+            <LaporForm
+              onOpenAuthModal={handleOpenAuthModal}
+              initialCategories={initialCategories}
+              initialCities={initialCities}
+            />
           </div>
         </div>
       </div>

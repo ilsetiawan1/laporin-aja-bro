@@ -19,8 +19,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
  
     async function initAuth() {
-      // getUser() — secure, verify ke Auth server
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // getUser() — verify session authenticity with Auth server
+      const {
+        data: { user: u },
+      } = await supabase.auth.getUser();
       if (mounted) {
         setUser(u ? { id: u.id, email: u.email ?? "" } : null);
         setLoading(false);
