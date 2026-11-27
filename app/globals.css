@@ -61,14 +61,14 @@
     transform: translateY(0);
   }
 
-  /* ── Orange Accent Button ── */
+  /* ── Orange Accent Button (WCAG AA >= 4.5:1 with white text) ── */
   .btn-orange {
-    background-color: #f97316;
+    background-color: #c2410c;
     color: #ffffff;
     font-weight: 600;
     padding: 0.75rem 1.75rem;
     border-radius: 0.75rem;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     border: none;
     display: inline-flex;
@@ -77,9 +77,9 @@
   }
 
   .btn-orange:hover {
-    background-color: #ea6c0a;
+    background-color: #9a3412;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 8px 25px rgba(194, 65, 12, 0.4);
   }
 
   /* ── Outline Button (light bg, white text) ── */
@@ -278,5 +278,70 @@
     padding: 0.375rem 1rem;
     border-radius: 9999px;
     margin-bottom: 1rem;
+  }
+
+  /* ── Pure CSS Volumetric Light Rays (0 ms TBT, compositor-only) ── */
+  .hero-rays-primary {
+    background: conic-gradient(
+      from 180deg at 50% -18%,
+      transparent 0deg,
+      rgba(191, 219, 254, 0.18) 10deg,
+      transparent 22deg,
+      rgba(226, 232, 240, 0.14) 34deg,
+      transparent 46deg,
+      rgba(147, 197, 253, 0.2) 56deg,
+      transparent 68deg,
+      transparent 292deg,
+      rgba(147, 197, 253, 0.2) 304deg,
+      transparent 314deg,
+      rgba(226, 232, 240, 0.14) 326deg,
+      transparent 338deg,
+      rgba(191, 219, 254, 0.18) 350deg,
+      transparent 360deg
+    );
+    mask-image: radial-gradient(ellipse 85% 92% at 50% 0%, #000 10%, rgba(0, 0, 0, 0.45) 48%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 92% at 50% 0%, #000 10%, rgba(0, 0, 0, 0.45) 48%, transparent 80%);
+    animation: hero-rays-pulse 9s ease-in-out infinite alternate;
+    will-change: opacity;
+  }
+
+  .hero-rays-secondary {
+    background: conic-gradient(
+      from 180deg at 50% -22%,
+      transparent 0deg,
+      transparent 6deg,
+      rgba(255, 255, 255, 0.12) 16deg,
+      transparent 28deg,
+      rgba(96, 165, 250, 0.15) 42deg,
+      transparent 58deg,
+      transparent 302deg,
+      rgba(96, 165, 250, 0.15) 318deg,
+      transparent 332deg,
+      rgba(255, 255, 255, 0.12) 344deg,
+      transparent 354deg,
+      transparent 360deg
+    );
+    mask-image: radial-gradient(ellipse 72% 82% at 50% 0%, #000 8%, rgba(0, 0, 0, 0.35) 45%, transparent 76%);
+    -webkit-mask-image: radial-gradient(ellipse 72% 82% at 50% 0%, #000 8%, rgba(0, 0, 0, 0.35) 45%, transparent 76%);
+    animation: hero-rays-pulse 13s ease-in-out infinite alternate-reverse;
+    will-change: opacity;
+  }
+}
+
+@keyframes hero-rays-pulse {
+  0% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rays-primary,
+  .hero-rays-secondary {
+    animation: none;
+    opacity: 0.85;
+    will-change: auto;
   }
 }
